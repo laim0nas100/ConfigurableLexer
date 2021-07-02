@@ -10,6 +10,10 @@ import java.util.Objects;
 public interface StringMatcher extends Id {
 
     public Match match(String str, int offset, int length);
+    
+    public default boolean canBeBreaking(){
+        return false;
+    }
 
     public default int minSize() {
         return 1;
