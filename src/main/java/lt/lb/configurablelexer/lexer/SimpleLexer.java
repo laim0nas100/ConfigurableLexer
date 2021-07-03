@@ -1,16 +1,14 @@
 package lt.lb.configurablelexer.lexer;
 
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import lt.lb.configurablelexer.lexer.StringMatcher.Match;
-import lt.lb.configurablelexer.lexer.StringMatcher.MatcherMatch;
-import lt.lb.configurablelexer.lexer.StringMatcher.PartialMatch;
-import lt.lb.configurablelexer.lexer.StringMatcher.PositiveMatch;
-import lt.lb.configurablelexer.token.CharListener;
+import lt.lb.configurablelexer.lexer.matchers.StringMatcher;
+import lt.lb.configurablelexer.lexer.matchers.StringMatcher.MatcherMatch;
+import lt.lb.configurablelexer.lexer.matchers.StringMatcher.PartialMatch;
+import lt.lb.configurablelexer.lexer.matchers.StringMatcher.PositiveMatch;
 import lt.lb.configurablelexer.token.ConfToken;
 import lt.lb.configurablelexer.token.ConfTokenBuffer;
 import lt.lb.configurablelexer.token.ConfTokenizer;
@@ -22,28 +20,15 @@ import lt.lb.configurablelexer.token.ConfTokenizer;
  */
 public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T> {
 
-    protected List<CharListener> charListeners = new ArrayList<>();
     protected ConfTokenizer<T> tokenizer;
     protected List<StringMatcher> matchers = new ArrayList<>();
 
     public SimpleLexer(ConfTokenizer<T> tokenizer) {
         this.tokenizer = Objects.requireNonNull(tokenizer);
     }
-
-    @Override
-    public void reset(Reader input) {
-        getDelegate().reset(input);
-        for (CharListener listener : charListeners) {
-            listener.reset();
-        }
-    }
-
-    @Override
-    public void charListener(boolean isTokenChar, int c) {
-        getDelegate().charListener(isTokenChar, c);
-        for (CharListener listener : charListeners) {
-            listener.listen(isTokenChar, c);
-        }
+    
+    public void addMatcher(StringMatcher matcher){
+        matchers.add(matcher);
     }
 
     @Override
@@ -71,7 +56,7 @@ public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T> {
             final int localLen = last - processed;
             final int localOffset = processed;
             Optional<MatcherMatch> optMatch = matchers.stream()
-                    .filter(m -> m.minSize() >= localLen)
+                    .filter(m -> m.minSize() <= localLen)
                     .map(m -> new MatcherMatch(m, m.match(string, localOffset, localLen)))
                     .filter(m -> m.match.isPostive())
                     .sorted(MatcherMatch.cmpMatcherMatch)
@@ -98,7 +83,7 @@ public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T> {
                     } else {
 
                         Optional<MatcherMatch> firstBreaking = matchers.stream()
-                                .filter(m -> m.minSize() >= localLen)
+                                .filter(m -> m.minSize() <= localLen)
                                 .filter(m -> m.canBeBreaking())
                                 .map(m -> new MatcherMatch(m, m.match(string, p.to, localLen)))
                                 .filter(m -> m.match.isPostive() && m.match.isBreaking())
@@ -132,12 +117,11 @@ public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T> {
                                         lexemes.add(makeLexeme(p2.from, p2.to, get, string));
 
                                     } else {// just make literal
-                                        lexemes.add(makeLiteral(p.from, p2.to, string));
+                                        lexemes.add(makeLiteral(p.from, p2.from, string));
                                         lexemes.add(makeLexeme(p2.from, p2.to, get, string));
                                     }
                                     processed = p2.to;
                                 }
-                                lexemes.add(makeLexeme(p.to, last, get, string));
                             }
                         } else {// not possible to break, treat as literal
                             lexemes.add(makeLiteral(processed, last, string));
@@ -245,13 +229,23 @@ public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T> {
         return ConfTokenBuffer.ofList(lexemes);
     }
 
-    public abstract T makeLexeme(int form, int to, MatcherMatch matcher, String str) throws Exception;
+    public abstract T makeLexeme(int from, int to, MatcherMatch matcher, String unbrokenString) throws Exception;
 
-    public abstract T makeLiteral(int from, int to, String str) throws Exception;
+    public abstract T makeLiteral(int from, int to, String unbrokenString) throws Exception;
 
     @Override
     public ConfTokenizer<T> getDelegate() {
         return tokenizer;
     }
+
+    public List<StringMatcher> getMatchers() {
+        return matchers;
+    }
+
+    public void setMatchers(List<StringMatcher> matchers) {
+        this.matchers = matchers;
+    }
+    
+    
 
 }

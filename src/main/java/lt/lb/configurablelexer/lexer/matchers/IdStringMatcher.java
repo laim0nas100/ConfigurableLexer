@@ -1,4 +1,4 @@
-package lt.lb.configurablelexer.lexer;
+package lt.lb.configurablelexer.lexer.matchers;
 
 import java.util.Objects;
 
@@ -6,7 +6,7 @@ import java.util.Objects;
  *
  * @author laim0nas100
  */
-public abstract class SerStringMatcher implements StringMatcher {
+public abstract class IdStringMatcher implements StringMatcher {
 
     @Override
     public abstract Match match(String str, int offset, int length);

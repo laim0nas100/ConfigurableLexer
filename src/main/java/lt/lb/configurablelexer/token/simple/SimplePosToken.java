@@ -6,28 +6,18 @@ package lt.lb.configurablelexer.token.simple;
  */
 public class SimplePosToken extends SimpleToken<Pos> {
 
-    protected Pos pos;
-
     public SimplePosToken(Pos pos, String val) {
-        super(val);
-        this.pos = pos;
+        this.info = pos;
+        this.value = val;
     }
 
-    @Override
-    public boolean infoAvailable() {
-        return pos != null;
+    public SimplePosToken() {
     }
-
-    @Override
-    public Pos getInfo() {
-        return pos;
-    }
+    
 
     @Override
     public String toString() {
-        return "SimplePosToken{" + "pos=" + pos + ", value="+value+"}";
+        return getClass().getName() + "{" + "pos=" + getInfo() + ", value=" + value + "}";
     }
-    
-    
 
 }

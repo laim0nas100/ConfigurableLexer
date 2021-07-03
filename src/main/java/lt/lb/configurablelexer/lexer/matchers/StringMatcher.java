@@ -1,7 +1,8 @@
-package lt.lb.configurablelexer.lexer;
+package lt.lb.configurablelexer.lexer.matchers;
 
 import java.util.Comparator;
 import java.util.Objects;
+import lt.lb.configurablelexer.lexer.Id;
 
 /**
  *
@@ -30,27 +31,11 @@ public interface StringMatcher extends Id {
 
         public final StringMatcher matcher;
         public final Match match;
-        public final boolean literal;
 
         public MatcherMatch(StringMatcher matcher, Match match) {
             this.matcher = matcher;
             this.match = match;
-            this.literal = false;
         }
-
-        public MatcherMatch(Match match) {
-            this.literal = true;
-            this.match = match;
-            this.matcher = new StringMatcher() {
-                @Override
-                public Match match(String str, int offset, int length) {
-                    return match;
-                }
-            };
-        }
-        
-        
-
     }
 
     public static class Match {

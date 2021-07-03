@@ -35,7 +35,7 @@ public class SimpleTokenizer extends BaseTokenizer<SimpleToken> {
     }
 
     @Override
-    protected ConfTokenizer<SimpleToken> getMainTokenizer() {
+    protected ConfTokenizer<SimpleToken> getCallbacks() {
         return this;
     }
 

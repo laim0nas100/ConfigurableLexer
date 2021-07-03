@@ -48,7 +48,7 @@ public class SimplePosTokenizer extends BaseTokenizer<SimplePosToken> {
     }
 
     @Override
-    protected ConfTokenizer<SimplePosToken> getMainTokenizer() {
+    protected ConfTokenizer<SimplePosToken> getCallbacks() {
         return this;
     }
 

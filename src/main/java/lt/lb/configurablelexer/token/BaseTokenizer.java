@@ -2,10 +2,7 @@ package lt.lb.configurablelexer.token;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Arrays;
 import java.util.Objects;
-import java.util.function.BiConsumer;
-import java.util.function.IntPredicate;
 import lt.lb.configurablelexer.utils.CharacterBuffer;
 import lt.lb.configurablelexer.utils.CharacterUtils;
 
@@ -38,6 +35,7 @@ public abstract class BaseTokenizer<T extends ConfToken> implements ConfTokenize
         ioBuffer = CharacterUtils.newCharacterBuffer(4096);
         currentTokenIndex = 0;
         bufferedTokens = ConfTokenBuffer.of();
+        getCallbacks().reset();
     }
 
     @Override
@@ -108,20 +106,20 @@ public abstract class BaseTokenizer<T extends ConfToken> implements ConfTokenize
 
     @Override
     public ConfTokenBuffer<T> constructTokens(char[] buffer, int offset, int length) throws Exception {
-        return getMainTokenizer().constructTokens(buffer, offset, length);
+        return getCallbacks().constructTokens(buffer, offset, length);
     }
 
     @Override
     public boolean isTokenChar(int c) {
-        return getMainTokenizer().isTokenChar(c);
+        return getCallbacks().isTokenChar(c);
     }
 
     @Override
     public void charListener(boolean isTokenChar, int c) {
-        getMainTokenizer().charListener(isTokenChar, c);
+        getCallbacks().charListener(isTokenChar, c);
     }
 
-    protected abstract ConfTokenizer<T> getMainTokenizer();
+    protected abstract TokenizerCallbacks<T> getCallbacks();
 
     public static class DeferredConfTokenizer<T extends ConfToken> implements DelegatingConfTokenizer<T> {
 
