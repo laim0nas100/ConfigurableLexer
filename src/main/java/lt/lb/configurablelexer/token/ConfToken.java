@@ -15,4 +15,5 @@ public interface ConfToken<Inf> {
     }
 
     public String getValue();
+    
 }

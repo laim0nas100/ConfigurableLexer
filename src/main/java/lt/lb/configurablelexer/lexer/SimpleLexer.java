@@ -26,8 +26,8 @@ public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T> {
     public SimpleLexer(ConfTokenizer<T> tokenizer) {
         this.tokenizer = Objects.requireNonNull(tokenizer);
     }
-    
-    public void addMatcher(StringMatcher matcher){
+
+    public void addMatcher(StringMatcher matcher) {
         matchers.add(matcher);
     }
 
@@ -40,8 +40,7 @@ public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T> {
 
         String string = String.valueOf(buffer, offset, length);
 
-        //TODO
-        // NEW IDEA - find first full, if not found 
+        // Find first full, if not found 
         // find first breaking. Break the string into 2 or 3 parts
         // if breaking is in the start - all good, continue with smaller string
         // if breaking is not in the start split the string [start][breaking_lexeme][the_rest]
@@ -114,12 +113,11 @@ public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T> {
                                     if (startingSliceFull.isPresent()) {
                                         MatcherMatch slice = startingSliceFull.get();
                                         lexemes.add(makeLexeme(processed, p2.from, slice, string));
-                                        lexemes.add(makeLexeme(p2.from, p2.to, get, string));
 
                                     } else {// just make literal
                                         lexemes.add(makeLiteral(p.from, p2.from, string));
-                                        lexemes.add(makeLexeme(p2.from, p2.to, get, string));
                                     }
+                                    lexemes.add(makeLexeme(p2.from, p2.to, get, string));
                                     processed = p2.to;
                                 }
                             }
@@ -136,105 +134,12 @@ public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T> {
         return ConfTokenBuffer.ofList(lexemes);
     }
 
-    public ConfTokenBuffer<T> constructLexemesOld(char[] buffer, int offset, int length) throws Exception {
-
-        String string = String.valueOf(buffer, offset, length);
-
-        int last = string.length();
-        ArrayList<T> lexemes = new ArrayList<>();
-
-        int processed = 0;
-
-        //TODO
-        // NEW IDEA - find first full, if not found 
-        // find first breaking. Break the string into 2 or 3 parts
-        // if breaking is in the start - all good, continue with smaller string
-        // if breaking is not in the start split the string [start][breaking_lexeme][the_rest]
-        // [the_rest] can also be empty.
-        // try to match [start], if failed, it becomes a literal.
-        boolean moreMatches = true;
-        List<MatcherMatch> matchDept = new ArrayList<>();
-        int debtProcessed = 0;
-
-        while (moreMatches && processed < last) {
-            final int localLen = last - processed;
-            final int localOffset = processed;
-            List<MatcherMatch> optMatch = matchers.stream()
-                    .filter(m -> m.minSize() >= localLen)
-                    .map(m -> new MatcherMatch(m, m.match(string, localOffset, localLen)))
-                    .filter(m -> m.match.isPostive())
-                    .sorted(MatcherMatch.cmpMatcherMatch)
-                    .collect(Collectors.toList());
-            boolean needFindBreak = false;
-            if (optMatch.isEmpty()) { // no more matches
-                lexemes.add(makeLiteral(processed, last, string));
-                moreMatches = false;
-            } else { // matched
-                MatcherMatch optMatcherMatch = optMatch.get(0);
-                PositiveMatch match = (PositiveMatch) optMatcherMatch.match;
-
-                if (match.isBreaking()) { // we can split tokens easily
-                    if (match.isFull()) {
-                        lexemes.add(makeLexeme(processed, last, optMatcherMatch, string));
-                        moreMatches = false;
-                    } else if (match.isPartial()) {
-                        PartialMatch pMatch = (PartialMatch) match;
-                        if (pMatch.from == processed) {//matched at the start, easy path
-                            lexemes.add(makeLexeme(processed, pMatch.to, optMatcherMatch, string));
-                            processed += pMatch.size();
-                        } else { // have leading chars
-
-                        }
-                    } else {
-                        throw new IllegalStateException("Unrecognized match type: " + match);
-                    }
-                } else {
-                    if (matchDept.isEmpty()) {
-                        if (match.isFull()) { // no chance for breaks.
-                            lexemes.add(makeLexeme(processed, last, optMatcherMatch, string));
-                            moreMatches = false;
-                        } else if (match.isPartial()) {
-                            PartialMatch pMatch = (PartialMatch) match;
-                            if (pMatch.from == processed) { //matched at the start
-
-                                matchDept.add(optMatcherMatch);
-                                processed += pMatch.size();
-                                debtProcessed += pMatch.size(); // make debt
-                            } else if (pMatch.from > processed) { // have leading chars, not good
-                                needFindBreak = true;
-                            } else {
-                                throw new IllegalStateException("Partial match out of bounds processed:" + processed + " returned from:" + pMatch.from);
-                            }
-                        } else {
-                            throw new IllegalStateException("Unrecognized match type: " + match);
-                        }
-                    }
-                    if (needFindBreak || !matchDept.isEmpty()) {
-
-                        // we have dept, only way to resolve is to find breaking
-                        Optional<MatcherMatch> findFirst = optMatch.stream().filter(f -> f.match.isBreaking()).findFirst();
-                        if (!findFirst.isPresent()) {
-                            //no breaks, this is a literal then
-
-                        } else {
-                            MatcherMatch get = findFirst.get(); // first breaking. Solve when we have chars before
-                        }
-                    }
-
-                }
-            }
-
-        }
-
-        return ConfTokenBuffer.ofList(lexemes);
-    }
-
     public abstract T makeLexeme(int from, int to, MatcherMatch matcher, String unbrokenString) throws Exception;
 
     public abstract T makeLiteral(int from, int to, String unbrokenString) throws Exception;
 
     @Override
-    public ConfTokenizer<T> getDelegate() {
+    public ConfTokenizer<T> delegate() {
         return tokenizer;
     }
 
@@ -245,7 +150,5 @@ public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T> {
     public void setMatchers(List<StringMatcher> matchers) {
         this.matchers = matchers;
     }
-    
-    
 
 }

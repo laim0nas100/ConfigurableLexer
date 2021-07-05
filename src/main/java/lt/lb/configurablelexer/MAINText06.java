@@ -1,17 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package lt.lb.configurablelexer;
 
 import java.io.File;
-import java.io.PrintWriter;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.io.FileReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import lt.lb.commons.DLog;
 import lt.lb.configurablelexer.lexer.SimpleLexer;
 import lt.lb.configurablelexer.lexer.matchers.FloatMatcher;
@@ -22,20 +14,27 @@ import lt.lb.configurablelexer.token.base.KeywordToken;
 import lt.lb.configurablelexer.token.base.StringToken;
 import lt.lb.configurablelexer.token.BaseTokenizer;
 import lt.lb.configurablelexer.token.ConfCharPredicate;
+import lt.lb.configurablelexer.token.ConfToken;
 import lt.lb.configurablelexer.token.ConfTokenizer;
 import lt.lb.configurablelexer.token.ConfTokenizerCallbacks;
+import lt.lb.configurablelexer.token.DefaultConfTokenizer;
 import lt.lb.configurablelexer.token.spec.LineAwareCharListener;
 import lt.lb.configurablelexer.token.TokenizerCallbacks;
+import lt.lb.configurablelexer.token.base.CommentToken;
 import lt.lb.configurablelexer.token.base.LiteralToken;
 import lt.lb.configurablelexer.token.base.NumberToken;
 import lt.lb.configurablelexer.token.simple.Pos;
-import lt.lb.configurablelexer.token.simple.SimplePosToken;
+import lt.lb.configurablelexer.token.spec.comment.LineCommentAwareCallback;
+import lt.lb.configurablelexer.token.spec.comment.LineCommentAwareCallbackString;
+import lt.lb.configurablelexer.token.spec.comment.MultilineCommentAwareCallback;
+import lt.lb.configurablelexer.token.spec.comment.PosAwareCommentCallback;
+import lt.lb.configurablelexer.token.spec.comment.PositionAwareCommentCallback;
 
 /**
  *
  * @author laim0nas100
  */
-public class MAIN2 {
+public class MAINText06 {
 
     public static void main(String[] args) throws Exception {
         DLog main = DLog.main();
@@ -44,33 +43,33 @@ public class MAIN2 {
         main.surroundString = false;
         main.threadName = false;
         DLog.useTimeFormat(main, "HH:mm:ss.SSS ");
-        Pattern compile = Pattern.compile("\\d+\\.\\d+");
-        String input = "labas 1+1.10\n"
-                + "int i = 10++;\n"
-                + "ok\n";
+        Reader input = new FileReader(new File("parse_text.txt"), StandardCharsets.UTF_8);
 
-        ConfTokenizerCallbacks callbacks = new ConfTokenizerCallbacks<>();
-
-        BaseTokenizer tokenizer = new BaseTokenizer() {
-            @Override
-            protected TokenizerCallbacks getCallbacks() {
-                return callbacks;
-            }
-        };
-        ConfCharPredicate tokenPred = new ConfCharPredicate();
-        tokenPred.disallowWhen(Character::isWhitespace);
-        
-        callbacks.setTokenCharPredicate(tokenPred);
+        DefaultConfTokenizer<ConfToken> tokenizer = new DefaultConfTokenizer();
 
         LineAwareCharListener lineListener = new LineAwareCharListener();
 
-        callbacks.addListener(lineListener);
+        tokenizer.getCallbacks()
+                .setTokenCharPredicate(
+                        new ConfCharPredicate().disallowWhen(Character::isWhitespace)
+                )
+                .addListener(lineListener)
+                .nest(t -> {
+                    return new PosAwareCommentCallback<ConfToken>(lineListener,t) {
+                        @Override
+                        public ConfToken contructComment(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
+                            return new CommentToken(String.valueOf(buffer, offset, length), start);
+                        }
+                    }
+                            .enableLineComment('#', '$')
+                            .enableLineComment("//")
+                            .enableMultilineComment("/*", "*/");
+                });
 
         SimpleLexer lexer = new SimpleLexer(tokenizer) {
             @Override
             public StringToken<Pos> makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String str) throws Exception {
-//                DLog.print(str);
-                Pos pos = new Pos(lineListener.getLine() + 1, from + lineListener.getColumn() - str.length());
+                Pos pos = lineListener.getPos(from, str.length());
                 String val = str.substring(from, to);
                 if (matcher.matcher instanceof KeywordMatcher) {
                     return new KeywordToken<>(val, pos);
@@ -92,30 +91,26 @@ public class MAIN2 {
 
             @Override
             public StringToken<Pos> makeLiteral(int from, int to, String str) throws Exception {
-//                DLog.print("Literal", str);
-                Pos pos = new Pos(lineListener.getLine() + 1, from + lineListener.getColumn() - str.length());
-
-                LiteralToken<Pos> literalToken = new LiteralToken<>();
-
-                literalToken.setInfo(pos);
-                literalToken.setValue(str.substring(from, to));
-                return literalToken;
+                Pos pos = lineListener.getPos(from, str.length());
+                return new LiteralToken<>(str.substring(from, to), pos);
             }
         };
 
-        callbacks.setConstructor(lexer);
+        tokenizer.getCallbacks().setConstructor(lexer);
 
         lexer.addMatcher(new KeywordMatcher("labas"));
         lexer.addMatcher(new IntegerMatcher());
         lexer.addMatcher(new FloatMatcher());
         lexer.addMatcher(new KeywordMatcher("+", true));
         lexer.addMatcher(new KeywordMatcher("++", true));
+        lexer.addMatcher(new KeywordMatcher(";", true));
 
         ConfTokenizer myTokenizer = lexer;
         myTokenizer.reset(input);
         myTokenizer.produceTokens(t -> {
             DLog.print(t);
         });
+        input.close();
 
         DLog.close();
     }

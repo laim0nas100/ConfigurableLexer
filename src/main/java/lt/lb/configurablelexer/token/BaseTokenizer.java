@@ -3,6 +3,7 @@ package lt.lb.configurablelexer.token;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Objects;
+import lt.lb.commons.DLog;
 import lt.lb.configurablelexer.utils.CharacterBuffer;
 import lt.lb.configurablelexer.utils.CharacterUtils;
 
@@ -11,15 +12,13 @@ import lt.lb.configurablelexer.utils.CharacterUtils;
  * @author laim0nas100
  * @param <T>
  */
-public abstract class BaseTokenizer<T extends ConfToken> implements ConfTokenizer<T> {
+public abstract class BaseTokenizer<T extends ConfToken> extends BufferedConfTokenizer<T> {
 
     protected Reader input;
     protected int offset, bufferIndex, ioBufferLen, tokenLen;
     protected char[] buffer;
     CharacterBuffer ioBuffer;
     protected int maxTokenLen = 255;
-    protected int currentTokenIndex;
-    protected ConfTokenBuffer<T> bufferedTokens;
 
     public BaseTokenizer() {
     }
@@ -62,7 +61,8 @@ public abstract class BaseTokenizer<T extends ConfToken> implements ConfTokenize
             bufferIndex += charCount;
 
             boolean isTokenChar = isTokenChar(c);
-            charListener(isTokenChar, c);
+            boolean isBreakChar = isBreakChar(isTokenChar, c);
+            charListener(isTokenChar, isBreakChar, c);
             if (isTokenChar) {               // if it's a token char
                 if (length >= buffer.length - 1) { // check if a supplementary could run out of bounds
                     buffer = CharacterUtils.resizeBuffer(buffer, 2 + length);// make sure a supplementary fits in the buffer
@@ -71,33 +71,17 @@ public abstract class BaseTokenizer<T extends ConfToken> implements ConfTokenize
                 if (length >= maxTokenLen) { // buffer overflow! make sure to check for >= surrogate pair could break == test
                     break;
                 }
-            } else if (length > 0) {           // at non-Letter w/ chars
+            } else if (isBreakChar || length > 0) {           // at non-Letter with chars or a break character
                 break;                           // return 'em
             }
         }
         currentTokenIndex = 0;
         this.bufferedTokens = constructTokens(buffer, 0, length);
+
+//        DLog.print(String.valueOf(buffer, offset, length), length, bufferedTokens);
         return true;
     }
 
-    @Override
-    public T getCurrentBufferedToken() throws Exception {
-        return this.bufferedTokens.get(this.currentTokenIndex);
-    }
-
-    @Override
-    public boolean hasNextBufferedToken() {
-        return this.bufferedTokens.size() > this.currentTokenIndex + 1;
-    }
-
-    @Override
-    public T getNextBufferedToken() throws Exception {
-        if (this.bufferedTokens.size() > this.currentTokenIndex + 1) {
-            this.currentTokenIndex++;
-            return getCurrentBufferedToken();
-        }
-        throw new IllegalStateException("Need to read from input, no more buffered tokens left");
-    }
 
     @Override
     public void close() throws IOException {
@@ -115,8 +99,8 @@ public abstract class BaseTokenizer<T extends ConfToken> implements ConfTokenize
     }
 
     @Override
-    public void charListener(boolean isTokenChar, int c) {
-        getCallbacks().charListener(isTokenChar, c);
+    public void charListener(boolean isTokenChar, boolean isBreakChar, int c) {
+        getCallbacks().charListener(isTokenChar, isBreakChar, c);
     }
 
     protected abstract TokenizerCallbacks<T> getCallbacks();
@@ -137,7 +121,7 @@ public abstract class BaseTokenizer<T extends ConfToken> implements ConfTokenize
         }
 
         @Override
-        public ConfTokenizer<T> getDelegate() {
+        public ConfTokenizer<T> delegate() {
             return Objects.requireNonNull(getDeferred(), "DeferredConfTokenizer must not be null");
         }
 

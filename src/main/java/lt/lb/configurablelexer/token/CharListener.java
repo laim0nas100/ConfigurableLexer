@@ -11,9 +11,10 @@ public interface CharListener {
      * newlines or global position in file
      *
      * @param isTokenChar
+     * @param isBreakChar
      * @param c
      */
-    public void listen(boolean isTokenChar, int c);
+    public void listen(boolean isTokenChar, boolean isBreakChar, int c);
 
     public default void reset() {
 

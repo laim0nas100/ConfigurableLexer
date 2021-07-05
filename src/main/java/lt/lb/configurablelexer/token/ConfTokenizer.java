@@ -19,6 +19,8 @@ public interface ConfTokenizer<T extends ConfToken> extends AutoCloseable, Token
     }
 
     public boolean readToBuffer() throws Exception;
+    
+    public boolean hasCurrentBufferedToken() throws Exception;
 
     public T getCurrentBufferedToken() throws Exception;
 
@@ -33,12 +35,13 @@ public interface ConfTokenizer<T extends ConfToken> extends AutoCloseable, Token
                 if (!read) {
                     break;
                 } else {
-                    T t = getCurrentBufferedToken();
-                    consumer.accept(t);
+                    if(hasCurrentBufferedToken()){
+                         consumer.accept(getCurrentBufferedToken());
+                    }
+                   
                 }
             } else {
-                T t = getNextBufferedToken();
-                consumer.accept(t);
+                consumer.accept(getNextBufferedToken());
             }
         }
 

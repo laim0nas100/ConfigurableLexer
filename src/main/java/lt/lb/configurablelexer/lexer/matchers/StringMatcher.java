@@ -2,15 +2,21 @@ package lt.lb.configurablelexer.lexer.matchers;
 
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.function.Predicate;
 import lt.lb.configurablelexer.lexer.Id;
 
 /**
  *
  * @author laim0nas100
  */
-public interface StringMatcher extends Id {
+public interface StringMatcher extends Id, Predicate<String> {
 
     public Match match(String str, int offset, int length);
+    
+    @Override
+    public default boolean test(String str){
+        return match(str, 0, str == null ? 0 : str.length()).isFull();
+    }
     
     public default boolean canBeBreaking(){
         return false;

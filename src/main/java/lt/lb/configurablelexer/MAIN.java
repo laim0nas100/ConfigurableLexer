@@ -48,7 +48,7 @@ public class MAIN {
             }
 
             @Override
-            public void charListener(boolean isTokenChar, int c) {
+            public void charListener(boolean isTokenChar,boolean isBreakChar, int c) {
                 if (lastToken == '\n') {// assuming we break on new line, so one token later
                     line++;
                     col = 0;

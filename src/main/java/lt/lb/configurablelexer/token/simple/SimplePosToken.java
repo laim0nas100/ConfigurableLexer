@@ -14,10 +14,4 @@ public class SimplePosToken extends SimpleToken<Pos> {
     public SimplePosToken() {
     }
     
-
-    @Override
-    public String toString() {
-        return getClass().getName() + "{" + "pos=" + getInfo() + ", value=" + value + "}";
-    }
-
 }

@@ -1,4 +1,7 @@
-package lt.lb.configurablelexer.token;
+package lt.lb.configurablelexer.token.spec;
+
+import lt.lb.configurablelexer.token.CharListener;
+import lt.lb.configurablelexer.token.simple.Pos;
 
 /**
  *
@@ -17,9 +20,8 @@ public class LineAwareCharListener implements CharListener {
         lastChar = -1;
     }
 
-
     @Override
-    public void listen(boolean isTokenChar, int c) {
+    public void listen(boolean isTokenChar, boolean isBreakChar, int c) {
         if (lastChar == '\n') {// reaction one token char later assuming we break on new line
             line++;
             column = 0;
@@ -40,7 +42,13 @@ public class LineAwareCharListener implements CharListener {
     public int getLastChar() {
         return lastChar;
     }
-    
-    
+
+    public Pos getPos(int offset, int length) {
+        return new Pos(getLine() + 1, offset + getColumn() - length);
+    }
+
+    public Pos getPos() {
+        return new Pos(getLine()+1, getColumn());
+    }
 
 }

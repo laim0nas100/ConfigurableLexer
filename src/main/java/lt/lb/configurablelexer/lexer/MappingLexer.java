@@ -35,8 +35,8 @@ public abstract class MappingLexer<T extends ConfToken,O extends ConfToken> impl
     }
 
     @Override
-    public void charListener(boolean isTokenChar, int c) {
-        getOriginal().charListener(isTokenChar, c);
+    public void charListener(boolean isTokenChar,boolean isBreakChar, int c) {
+        getOriginal().charListener(isTokenChar,isBreakChar, c);
     }
 
     @Override

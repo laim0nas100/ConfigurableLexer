@@ -32,6 +32,9 @@ public class ProcessedToken<Inf,T> extends StringToken<Inf> {
     public void processValue(Function<String,T> func){
         setProcessedValue(func.apply(getValue()));
     }
-    
-    
+
+    @Override
+    public String toStringValues() {
+        return super.toStringValues() + ", processedValue=" + processedValue;
+    }
 }

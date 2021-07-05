@@ -19,66 +19,67 @@ public interface DelegatingConfTokenizer<T extends ConfToken> extends ConfTokeni
         }
 
         @Override
-        public ConfTokenizer<T> getDelegate() {
+        public ConfTokenizer<T> delegate() {
             return delegate;
         }
 
     }
 
-    public ConfTokenizer<T> getDelegate();
+    public ConfTokenizer<T> delegate();
 
     @Override
-    public default void charListener(boolean isTokenChar, int c) {
-        getDelegate().charListener(isTokenChar, c);
+    public default void charListener(boolean isTokenChar,boolean isBreakChar, int c) {
+        delegate().charListener(isTokenChar,isBreakChar, c);
     }
 
     @Override
     public default void produceTokens(Consumer<T> consumer) throws Exception {
-        getDelegate().produceTokens(consumer);
+        delegate().produceTokens(consumer);
     }
     
-    
-    
-    
-
     @Override
     public default void reset(Reader input) {
-        getDelegate().reset(input);
+        delegate().reset(input);
     }
 
     @Override
     public default boolean isTokenChar(int c) {
-        return getDelegate().isTokenChar(c);
+        return delegate().isTokenChar(c);
     }
 
     @Override
     public default boolean readToBuffer() throws Exception {
-        return getDelegate().readToBuffer();
+        return delegate().readToBuffer();
     }
 
     @Override
     public default T getCurrentBufferedToken() throws Exception {
-        return getDelegate().getCurrentBufferedToken();
+        return delegate().getCurrentBufferedToken();
     }
 
     @Override
     public default boolean hasNextBufferedToken() {
-        return getDelegate().hasNextBufferedToken();
+        return delegate().hasNextBufferedToken();
     }
 
     @Override
     public default T getNextBufferedToken() throws Exception {
-        return getDelegate().getNextBufferedToken();
+        return delegate().getNextBufferedToken();
     }
 
     @Override
     public default ConfTokenBuffer<T> constructTokens(char[] buffer, int offset, int length) throws Exception {
-        return getDelegate().constructTokens(buffer, offset, length);
+        return delegate().constructTokens(buffer, offset, length);
+    }
+
+    @Override
+    public default boolean hasCurrentBufferedToken() throws Exception {
+        return delegate().hasCurrentBufferedToken();
     }
 
     @Override
     public default void close() throws Exception {
-        getDelegate().close();
+        delegate().close();
     }
 
 }

@@ -1,84 +1,105 @@
 package lt.lb.configurablelexer.token;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.function.Function;
 import java.util.function.IntPredicate;
-import java.util.function.Predicate;
 
 /**
  *
  * @author laim0nas100
+ *
+ * This acts as a starting and stopping point for all
+ * {@link TokenizerCallbacks}.
+ *
+ * This can be nested within something else, then the callback starts here but
+ * is redirected to where is it nested then assuming every implementation is
+ * correct (call super or delegate on appropriate methods), it can trickle back
+ * down here.
+ *
  */
 public class ConfTokenizerCallbacks<T extends ConfToken> implements TokenizerCallbacksListeners<T> {
 
     protected List<CharListener> charListeners = new ArrayList<>();
-    protected Set<Integer> allowedChars = new HashSet<>();
-    protected Set<Integer> disallowedChars = new HashSet<>();
-    protected List<IntPredicate> allowed = new ArrayList<>();
-    protected List<IntPredicate> disallowed = new ArrayList<>();
+    protected IntPredicate tokenCharPredicate = c -> true;
+    protected IntPredicate breakCharPredicate = c -> false;
     protected ConfTokenConstructor<T> constructor = ConfTokenConstructor.NOT_SET;
-    
-    public void allowChars(Collection<Integer> ac){
-        allowedChars.addAll(ac);
-    }
-    
-    public void allowChars(int ...chars){
-        for(int c:chars){
-            allowedChars.add(c);
+
+    protected TokenizerCallbacks<T> nestedWithin;
+
+    protected boolean withinNestedCall = false;
+
+    @Override
+    public void reset() {
+        if (!withinNestedCall && nestedWithin != null) {
+            withinNestedCall = true;
+            try {
+                nestedWithin.reset();
+            } finally {
+                withinNestedCall = false;
+            }
+        } else {
+            TokenizerCallbacksListeners.super.reset();
         }
     }
-    
-    public void disallowChars(Collection<Integer> ac){
-        disallowedChars.addAll(ac);
-    }
-    
-    public void disallowChars(int ...chars){
-        for(int c:chars){
-            disallowedChars.add(c);
+
+    @Override
+    public void charListener(boolean isTokenChar, boolean isBreakChar, int c) {
+        if (!withinNestedCall && nestedWithin != null) {
+            withinNestedCall = true;
+            try {
+                nestedWithin.charListener(isTokenChar, isBreakChar, c);
+            } finally {
+                withinNestedCall = false;
+            }
+        } else {
+            TokenizerCallbacksListeners.super.charListener(isTokenChar, isBreakChar, c);
         }
     }
-    
-    public void allowWhen(IntPredicate pred){
-        Objects.requireNonNull(pred, "Predicate is null");
-        allowed.add(pred);
-    }
-    
-    public void disallowWhen(IntPredicate pred){
-        Objects.requireNonNull(pred, "Predicate is null");
-        disallowed.add(pred);
-    }
-    
 
     @Override
     public ConfTokenBuffer<T> constructTokens(char[] buffer, int offset, int length) throws Exception {
+        if (!withinNestedCall && nestedWithin != null) {
+            withinNestedCall = true;
+            try {
+                return nestedWithin.constructTokens(buffer, offset, length);
+            } finally {
+                withinNestedCall = false;
+            }
+        }
         return constructor.constructTokens(buffer, offset, length);
     }
 
     @Override
     public boolean isTokenChar(int c) {
-        for(IntPredicate pred:allowed){
-            if(pred.test(c)){
-                return true;
+        if (!withinNestedCall && nestedWithin != null) {
+            withinNestedCall = true;
+            try {
+                return nestedWithin.isTokenChar(c);
+            } finally {
+                withinNestedCall = false;
             }
+
         }
-        for(IntPredicate pred:disallowed){
-            if(pred.test(c)){
-                return false;
-            }
-        }
-        if(allowedChars.contains(c)){
-            return true;
-        }
-        return !disallowedChars.contains(c);
+        return tokenCharPredicate.test(c);
     }
-    
-    public void addListener(CharListener listener){
+
+    @Override
+    public boolean isBreakChar(boolean isTokenChar, int c) {
+        if (!withinNestedCall && nestedWithin != null) {
+            withinNestedCall = true;
+            try {
+                return nestedWithin.isBreakChar(isTokenChar, c);
+            } finally {
+                withinNestedCall = false;
+            }
+        }
+        return breakCharPredicate.test(c);
+    }
+
+    public ConfTokenizerCallbacks<T> addListener(CharListener listener) {
         charListeners.add(listener);
+        return this;
     }
 
     @Override
@@ -94,38 +115,6 @@ public class ConfTokenizerCallbacks<T extends ConfToken> implements TokenizerCal
         this.charListeners = charListeners;
     }
 
-    public Set<Integer> getAllowedChars() {
-        return allowedChars;
-    }
-
-    public void setAllowedChars(Set<Integer> allowedChars) {
-        this.allowedChars = allowedChars;
-    }
-
-    public Set<Integer> getDisallowedChars() {
-        return disallowedChars;
-    }
-
-    public void setDisallowedChars(Set<Integer> disallowedChars) {
-        this.disallowedChars = disallowedChars;
-    }
-
-    public List<IntPredicate> getAllowed() {
-        return allowed;
-    }
-
-    public void setAllowed(List<IntPredicate> allowed) {
-        this.allowed = allowed;
-    }
-
-    public List<IntPredicate> getDisallowed() {
-        return disallowed;
-    }
-
-    public void setDisallowed(List<IntPredicate> disallowed) {
-        this.disallowed = disallowed;
-    }
-
     public ConfTokenConstructor<T> getConstructor() {
         return constructor;
     }
@@ -133,8 +122,44 @@ public class ConfTokenizerCallbacks<T extends ConfToken> implements TokenizerCal
     public void setConstructor(ConfTokenConstructor<T> constructor) {
         this.constructor = constructor;
     }
-    
-    
 
+    public IntPredicate getTokenCharPredicate() {
+        return tokenCharPredicate;
+    }
+
+    public ConfTokenizerCallbacks<T> setTokenCharPredicate(IntPredicate tokenCharPredicate) {
+        this.tokenCharPredicate = tokenCharPredicate;
+        return this;
+    }
+
+    public IntPredicate getBreakCharPredicate() {
+        return breakCharPredicate;
+    }
+
+    public ConfTokenizerCallbacks<T> setBreakCharPredicate(IntPredicate breakCharPredicate) {
+        this.breakCharPredicate = breakCharPredicate;
+        return this;
+    }
+
+    public TokenizerCallbacks<T> getNestedWithin() {
+        return nestedWithin;
+    }
+
+    public ConfTokenizerCallbacks setNestedWithin(TokenizerCallbacks<T> nestedWithin) {
+        this.nestedWithin = nestedWithin;
+        return this;
+    }
+
+    public TokenizerCallbacks<T> nest(Function<TokenizerCallbacks<T>, TokenizerCallbacks<T>> function) {
+        if (nestedWithin == null) {
+            TokenizerCallbacks<T> apply = function.apply(this);
+            setNestedWithin(apply);
+            return apply;
+        } else {
+            TokenizerCallbacks<T> apply = function.apply(nestedWithin);
+            setNestedWithin(apply);
+            return apply;
+        }
+    }
 
 }

@@ -23,9 +23,6 @@ public class StringToken<Inf> implements ConfToken<Inf> {
         this.value = value;
         this.info = info;
     }
-    
-    
-    
     @Override
     public String getValue() {
         return value;
@@ -46,7 +43,11 @@ public class StringToken<Inf> implements ConfToken<Inf> {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName()+"{" + "value=" + value + ", info=" + info + '}';
+        return getClass().getSimpleName()+"{" +toStringValues() + '}';
+    }
+    
+    public String toStringValues(){
+        return "value=" + value + ", info=" + info;
     }
     
     

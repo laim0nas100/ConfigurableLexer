@@ -1,5 +1,6 @@
 package lt.lb.configurablelexer.token;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -12,6 +13,14 @@ public interface ConfTokenBuffer<T extends ConfToken> {
 
     public int size();
 
+    public default T getFirst() {
+        return get(0);
+    }
+
+    public default T getLast() {
+        return get(size() - 1);
+    }
+
     public static <T extends ConfToken> ConfTokenBuffer<T> ofList(List<T> list) {
         return new ConfTokenBuffer<T>() {
             @Override
@@ -23,9 +32,16 @@ public interface ConfTokenBuffer<T extends ConfToken> {
             public int size() {
                 return list.size();
             }
+
+            @Override
+            public String toString() {
+                return list.toString();
+            }
+            
+            
         };
     }
-    
+
     public static <T extends ConfToken> ConfTokenBuffer<T> of(T... list) {
         return new ConfTokenBuffer<T>() {
             @Override
@@ -37,8 +53,13 @@ public interface ConfTokenBuffer<T extends ConfToken> {
             public int size() {
                 return list.length;
             }
+
+            @Override
+            public String toString() {
+                return Arrays.toString(list);
+            }
+            
         };
     }
-    
-    
+
 }

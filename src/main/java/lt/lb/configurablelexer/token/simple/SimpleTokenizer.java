@@ -24,7 +24,7 @@ public class SimpleTokenizer extends BaseTokenizer<SimpleToken> {
     }
 
     @Override
-    public void charListener(boolean isTokenChar, int c) {
+    public void charListener(boolean isTokenChar, boolean isBreakChar, int c) {
         //
     }
     
