@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.Objects;
 import lt.lb.commons.DLog;
+import lt.lb.configurablelexer.token.CharInfo.CharInfoDefault;
 import lt.lb.configurablelexer.utils.CharacterBuffer;
 import lt.lb.configurablelexer.utils.CharacterUtils;
 
@@ -31,9 +32,9 @@ public abstract class BaseTokenizer<T extends ConfToken> extends BufferedConfTok
         bufferIndex = 0;
         ioBufferLen = 0;
         tokenLen = 0;
-        ioBuffer = CharacterUtils.newCharacterBuffer(4096);
+        ioBuffer = CharacterUtils.newCharacterBuffer(256);
         currentTokenIndex = 0;
-        bufferedTokens = ConfTokenBuffer.of();
+        bufferedTokens = ConfTokenBuffer.empty();
         getCallbacks().reset();
     }
 
@@ -42,6 +43,7 @@ public abstract class BaseTokenizer<T extends ConfToken> extends BufferedConfTok
         int length = 0;
         while (true) {
             if (bufferIndex >= ioBufferLen) {
+                //TODO, figure out the last char in reader
                 offset += ioBufferLen;
                 CharacterUtils.fill(ioBuffer, input); // read supplementary char aware with CharacterUtils
                 if (ioBuffer.getLength() == 0) {
@@ -61,8 +63,10 @@ public abstract class BaseTokenizer<T extends ConfToken> extends BufferedConfTok
             bufferIndex += charCount;
 
             boolean isTokenChar = isTokenChar(c);
-            boolean isBreakChar = isBreakChar(isTokenChar, c);
-            charListener(isTokenChar, isBreakChar, c);
+            boolean isBreakChar = isBreakChar(c);
+//            String str = Character.toString(c);
+//            DLog.print(str);
+            charListener(CharInfoDefault.of(isTokenChar, isBreakChar, false), c);
             if (isTokenChar) {               // if it's a token char
                 if (length >= buffer.length - 1) { // check if a supplementary could run out of bounds
                     buffer = CharacterUtils.resizeBuffer(buffer, 2 + length);// make sure a supplementary fits in the buffer
@@ -71,7 +75,8 @@ public abstract class BaseTokenizer<T extends ConfToken> extends BufferedConfTok
                 if (length >= maxTokenLen) { // buffer overflow! make sure to check for >= surrogate pair could break == test
                     break;
                 }
-            } else if (isBreakChar || length > 0) {           // at non-Letter with chars or a break character
+            } 
+            if (isBreakChar || (!isTokenChar && length > 0)) {           // at non-Letter with chars or a break character
                 break;                           // return 'em
             }
         }
@@ -99,8 +104,15 @@ public abstract class BaseTokenizer<T extends ConfToken> extends BufferedConfTok
     }
 
     @Override
-    public void charListener(boolean isTokenChar, boolean isBreakChar, int c) {
-        getCallbacks().charListener(isTokenChar, isBreakChar, c);
+    public boolean isBreakChar(int c) {
+        return getCallbacks().isBreakChar(c);
+    }
+    
+    
+
+    @Override
+    public void charListener(CharInfo chInfo, int c) {
+        getCallbacks().charListener(chInfo, c);
     }
 
     protected abstract TokenizerCallbacks<T> getCallbacks();

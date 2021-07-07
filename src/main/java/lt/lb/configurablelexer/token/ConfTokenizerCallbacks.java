@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.IntPredicate;
+import lt.lb.configurablelexer.Redirecter;
 
 /**
  *
@@ -27,74 +28,47 @@ public class ConfTokenizerCallbacks<T extends ConfToken> implements TokenizerCal
 
     protected TokenizerCallbacks<T> nestedWithin;
 
-    protected boolean withinNestedCall = false;
+    public ConfTokenizerCallbacks() {
+        nestedWithin = this;
+    }
+
+    protected final Redirecter.RedirecterRun redirReset = Redirecter.RedirecterRun.of(() -> getNestedWithin().reset(), TokenizerCallbacksListeners.super::reset);
 
     @Override
     public void reset() {
-        if (!withinNestedCall && nestedWithin != null) {
-            withinNestedCall = true;
-            try {
-                nestedWithin.reset();
-            } finally {
-                withinNestedCall = false;
-            }
-        } else {
-            TokenizerCallbacksListeners.super.reset();
-        }
+        redirReset.run();
     }
+
+    protected final Redirecter.RedirecterCharListener redirCharListener = new Redirecter.RedirecterCharListener(
+            (ch, chr) -> getNestedWithin().charListener(ch, chr), TokenizerCallbacksListeners.super::charListener);
 
     @Override
-    public void charListener(boolean isTokenChar, boolean isBreakChar, int c) {
-        if (!withinNestedCall && nestedWithin != null) {
-            withinNestedCall = true;
-            try {
-                nestedWithin.charListener(isTokenChar, isBreakChar, c);
-            } finally {
-                withinNestedCall = false;
-            }
-        } else {
-            TokenizerCallbacksListeners.super.charListener(isTokenChar, isBreakChar, c);
-        }
+    public void charListener(CharInfo chInfo, int c) {
+        redirCharListener.charListener(chInfo, c);
     }
 
+    protected final Redirecter.RedirecterConfTokenConstructor<T> redirConstructor
+            = new Redirecter.RedirecterConfTokenConstructor((b,o,l) -> getNestedWithin().constructTokens(b, o, l), (b,o,l) -> constructor.constructTokens(b, o, l));
+    
     @Override
     public ConfTokenBuffer<T> constructTokens(char[] buffer, int offset, int length) throws Exception {
-        if (!withinNestedCall && nestedWithin != null) {
-            withinNestedCall = true;
-            try {
-                return nestedWithin.constructTokens(buffer, offset, length);
-            } finally {
-                withinNestedCall = false;
-            }
-        }
-        return constructor.constructTokens(buffer, offset, length);
+        return redirConstructor.constructTokens(buffer, offset, length);
     }
+
+    protected final Redirecter.RedirecterIntPredicate redirIsToken
+            = new Redirecter.RedirecterIntPredicate(c -> getNestedWithin().isTokenChar(c), c -> tokenCharPredicate.test(c));
 
     @Override
     public boolean isTokenChar(int c) {
-        if (!withinNestedCall && nestedWithin != null) {
-            withinNestedCall = true;
-            try {
-                return nestedWithin.isTokenChar(c);
-            } finally {
-                withinNestedCall = false;
-            }
-
-        }
-        return tokenCharPredicate.test(c);
+        return redirIsToken.test(c);
     }
 
+    protected final Redirecter.RedirecterIntPredicate redirIsBreak
+            = new Redirecter.RedirecterIntPredicate(c -> getNestedWithin().isBreakChar(c), c -> breakCharPredicate.test(c));
+
     @Override
-    public boolean isBreakChar(boolean isTokenChar, int c) {
-        if (!withinNestedCall && nestedWithin != null) {
-            withinNestedCall = true;
-            try {
-                return nestedWithin.isBreakChar(isTokenChar, c);
-            } finally {
-                withinNestedCall = false;
-            }
-        }
-        return breakCharPredicate.test(c);
+    public boolean isBreakChar(int c) {
+        return redirIsBreak.test(c);
     }
 
     public ConfTokenizerCallbacks<T> addListener(CharListener listener) {
@@ -150,13 +124,13 @@ public class ConfTokenizerCallbacks<T extends ConfToken> implements TokenizerCal
         return this;
     }
 
-    public TokenizerCallbacks<T> nest(Function<TokenizerCallbacks<T>, TokenizerCallbacks<T>> function) {
+    public <N extends TokenizerCallbacks<T>> N nest(Function<TokenizerCallbacks<T>, N> function) {
         if (nestedWithin == null) {
-            TokenizerCallbacks<T> apply = function.apply(this);
+            N apply = function.apply(this);
             setNestedWithin(apply);
             return apply;
         } else {
-            TokenizerCallbacks<T> apply = function.apply(nestedWithin);
+            N apply = function.apply(nestedWithin);
             setNestedWithin(apply);
             return apply;
         }

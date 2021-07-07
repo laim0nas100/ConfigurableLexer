@@ -1,7 +1,7 @@
 package lt.lb.configurablelexer.parse;
 
 import java.util.function.Predicate;
-import lt.lb.configurablelexer.lexer.Id;
+import lt.lb.configurablelexer.Id;
 import lt.lb.configurablelexer.parse.impl.ImportanceTokenMatcher;
 import lt.lb.configurablelexer.parse.impl.NamedTokenMatcher;
 import lt.lb.configurablelexer.token.ConfToken;

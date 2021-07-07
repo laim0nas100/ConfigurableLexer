@@ -1,6 +1,7 @@
 package lt.lb.configurablelexer.lexer;
 
 import java.io.Reader;
+import lt.lb.configurablelexer.token.CharInfo;
 import lt.lb.configurablelexer.token.ConfToken;
 import lt.lb.configurablelexer.token.ConfTokenBuffer;
 import lt.lb.configurablelexer.token.ConfTokenizer;
@@ -35,8 +36,8 @@ public abstract class MappingLexer<T extends ConfToken,O extends ConfToken> impl
     }
 
     @Override
-    public void charListener(boolean isTokenChar,boolean isBreakChar, int c) {
-        getOriginal().charListener(isTokenChar,isBreakChar, c);
+    public void charListener(CharInfo chInfo, int c) {
+        getOriginal().charListener(chInfo, c);
     }
 
     @Override

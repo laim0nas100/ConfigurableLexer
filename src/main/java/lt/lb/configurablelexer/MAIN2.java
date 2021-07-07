@@ -19,7 +19,7 @@ import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
 import lt.lb.configurablelexer.lexer.matchers.StringMatcher;
 import lt.lb.configurablelexer.lexer.matchers.KeywordMatcher;
 import lt.lb.configurablelexer.token.base.KeywordToken;
-import lt.lb.configurablelexer.token.base.StringToken;
+import lt.lb.configurablelexer.token.base.BaseStringToken;
 import lt.lb.configurablelexer.token.BaseTokenizer;
 import lt.lb.configurablelexer.token.ConfCharPredicate;
 import lt.lb.configurablelexer.token.ConfTokenizer;
@@ -68,7 +68,7 @@ public class MAIN2 {
 
         SimpleLexer lexer = new SimpleLexer(tokenizer) {
             @Override
-            public StringToken<Pos> makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String str) throws Exception {
+            public BaseStringToken<Pos> makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String str) throws Exception {
 //                DLog.print(str);
                 Pos pos = new Pos(lineListener.getLine() + 1, from + lineListener.getColumn() - str.length());
                 String val = str.substring(from, to);
@@ -91,7 +91,7 @@ public class MAIN2 {
             }
 
             @Override
-            public StringToken<Pos> makeLiteral(int from, int to, String str) throws Exception {
+            public BaseStringToken<Pos> makeLiteral(int from, int to, String str) throws Exception {
 //                DLog.print("Literal", str);
                 Pos pos = new Pos(lineListener.getLine() + 1, from + lineListener.getColumn() - str.length());
 

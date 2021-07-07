@@ -12,7 +12,7 @@ import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
 import lt.lb.configurablelexer.lexer.matchers.StringMatcher;
 import lt.lb.configurablelexer.lexer.matchers.KeywordMatcher;
 import lt.lb.configurablelexer.token.base.KeywordToken;
-import lt.lb.configurablelexer.token.base.StringToken;
+import lt.lb.configurablelexer.token.base.BaseStringToken;
 import lt.lb.configurablelexer.token.BaseTokenizer;
 import lt.lb.configurablelexer.token.ConfCharPredicate;
 import lt.lb.configurablelexer.token.ConfToken;
@@ -53,51 +53,66 @@ public class MAINText04 {
 
         LineCommentAwareCallback<ConfToken, Pos> lineCommentCallback = new LineCommentAwareCallback<ConfToken, Pos>(callbacks) {
             @Override
-            public Pos startComment() {
+            public Pos start() {
                 return lineListener.getPos();
             }
 
             @Override
-            public Pos endComment() {
+            public Pos mid() {
                 return lineListener.getPos();
             }
 
             @Override
-            public ConfToken contructComment(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
+            public Pos end() {
+                return lineListener.getPos();
+            }
+
+            @Override
+            public ConfToken construct(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
                 return new CommentToken<>(String.valueOf(buffer, offset, length), start);
             }
         };
         lineCommentCallback.setCommentStart(ConfCharPredicate.ofChars('#'));
         LineCommentAwareCallbackString<ConfToken, Pos> lineCommentCallbackString = new LineCommentAwareCallbackString<ConfToken, Pos>(lineCommentCallback) {
             @Override
-            public Pos startComment() {
+            public Pos start() {
                 return lineListener.getPos();
             }
 
             @Override
-            public Pos endComment() {
+            public Pos mid() {
                 return lineListener.getPos();
             }
 
             @Override
-            public ConfToken contructComment(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
+            public Pos end() {
+                return lineListener.getPos();
+            }
+
+            @Override
+            public ConfToken construct(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
                 return new CommentToken<>(String.valueOf(buffer, offset, length), start);
             }
         };
         lineCommentCallbackString.setCommentStart("//");
         MultilineCommentAwareCallback<ConfToken, Pos> multiLineCommentCallback = new MultilineCommentAwareCallback<ConfToken, Pos>(lineCommentCallbackString) {
             @Override
-            public Pos startComment() {
+            public Pos start() {
                 return lineListener.getPos();
             }
 
             @Override
-            public Pos endComment() {
+            public Pos mid() {
                 return lineListener.getPos();
             }
 
             @Override
-            public ConfToken contructComment(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
+            public Pos end() {
+                return lineListener.getPos();
+            }
+
+            @Override
+            public ConfToken construct(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
                 return new CommentToken<>(String.valueOf(buffer, offset, length), start);
             }
 
@@ -105,7 +120,7 @@ public class MAINText04 {
         multiLineCommentCallback.setCommentStart("/*");
         multiLineCommentCallback.setCommentEnd("*/");
 
-        callbacks.setNestedWithin(multiLineCommentCallback);
+        callbacks.nest(t->multiLineCommentCallback);
 
         BaseTokenizer tokenizer_with_comments = new BaseTokenizer() {
 
@@ -117,7 +132,7 @@ public class MAINText04 {
 
         SimpleLexer lexer = new SimpleLexer(tokenizer_with_comments) {
             @Override
-            public StringToken<Pos> makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String str) throws Exception {
+            public BaseStringToken<Pos> makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String str) throws Exception {
                 Pos pos = lineListener.getPos(from, str.length());
                 String val = str.substring(from, to);
                 if (matcher.matcher instanceof KeywordMatcher) {
@@ -139,7 +154,7 @@ public class MAINText04 {
             }
 
             @Override
-            public StringToken<Pos> makeLiteral(int from, int to, String str) throws Exception {
+            public BaseStringToken<Pos> makeLiteral(int from, int to, String str) throws Exception {
                 Pos pos = lineListener.getPos(from, str.length());
                 return new LiteralToken<>(str.substring(from, to), pos);
             }

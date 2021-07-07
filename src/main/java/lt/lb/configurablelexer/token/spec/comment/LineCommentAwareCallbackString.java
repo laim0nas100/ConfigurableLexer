@@ -1,17 +1,17 @@
 package lt.lb.configurablelexer.token.spec.comment;
 
+import lt.lb.commons.DLog;
+import lt.lb.configurablelexer.token.CharInfo;
 import lt.lb.configurablelexer.token.ConfToken;
-import lt.lb.configurablelexer.token.ConfTokenBuffer;
 import lt.lb.configurablelexer.token.TokenizerCallbacks;
 
 /**
  *
- * Caches last produced {@link ConfTokenBuffer} and checks the last token. Only
- * last token can activate comment mode;
+ * Caches and checks the string for comment activation.
  *
  * @author laim0nas100
  */
-public abstract class LineCommentAwareCallbackString<T extends ConfToken,I> extends CommentAwareCallback<T,I> {
+public abstract class LineCommentAwareCallbackString<T extends ConfToken, I> extends CommentAwareCallback<T, I> {
 
     protected String commentStart = "//";
     protected boolean ignoreCase = false;
@@ -27,35 +27,45 @@ public abstract class LineCommentAwareCallbackString<T extends ConfToken,I> exte
     }
 
     @Override
-    public void reset() {
+    public void resetInternalState() {
+        super.resetInternalState();
         commentPrefixBuffer.setLength(0);
     }
-
+    
     @Override
-    public void charListener(boolean isTokenChar, boolean isBreakChar, int c) {
-        if (withinComment && c == '\n') {
-            withinComment = false;
-            lastCommentEndInfo = endComment();
-            constructComment = true;
+    public void charListener(CharInfo chInfo, int c) {
+        if (isDisabled()) {
+            super.charListener(chInfo, c);
+            return;
         }
-        if (!constructComment) {// not ended comment
+        if (within && c == '\n') {
+            within = false;
+//            DLog.print("END LineCommentAwareCallbackString");
+            lastEndInfo = end();
+            construct = true;
+        }
+        if (!construct) {// not ended comment
             if (tryMatchNewBeginningAndClear(ignoreCase, commentPrefixBuffer, commentStart, c)) {
-                withinComment = true;
-                lastCommentStartInfo = startComment();
+                within = true;
+//                 DLog.print("START LineCommentAwareCallbackString");
+                lastStartInfo = start();
             }
         }
 
-        delegate().charListener(isTokenChar, isBreakChar, c);
+        super.charListener(chInfo, c);
     }
 
     @Override
     public boolean isTokenChar(int c) {
-        if (withinComment) {
+        if (isDisabled()) {
+            return super.isTokenChar(c);
+        }
+        if (within) {
             return c != '\n';
         }
-        return delegate().isTokenChar(c);
+        return super.isTokenChar(c);
     }
-    
+
     public String getCommentStart() {
         return commentStart;
     }

@@ -5,7 +5,7 @@ package lt.lb.configurablelexer.token.base;
  *
  * @author laim0nas100
  */
-public class KeywordToken<Inf> extends StringToken<Inf> {
+public class KeywordToken<Inf> extends BaseStringToken<Inf> {
 
     public KeywordToken() {
     }

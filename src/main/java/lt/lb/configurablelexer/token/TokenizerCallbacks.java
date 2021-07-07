@@ -4,43 +4,37 @@ package lt.lb.configurablelexer.token;
  *
  * @author laim0nas100
  */
-public interface TokenizerCallbacks<T extends ConfToken> extends ConfTokenConstructor<T> {
+public interface TokenizerCallbacks<T extends ConfToken> extends ConfTokenConstructor<T>, CharListener {
 
     /**
-     * Reset anything that is resettable, like {@link ConfTokenizer} and {@link CharListener}
+     * Reset anything that is resettable, like {@link ConfTokenizer} and
+     * {@link CharListener}
      */
     public default void reset() {
 
     }
 
     /**
-     * Tokenizer can keep track of chars that has been read.
-     *
-     * @param isTokenChar
-     * @param isBreakChar
-     * @param c
-     */
-    public void charListener(boolean isTokenChar, boolean isBreakChar, int c);
-
-    /**
      * If char can be a part of a token. Should split char stream if non-token
-     * char is found;
+     * codepoint is found.
      *
-     * @param c
+     * It is not always called, use {@link TokenizerCallbacks#charListener(boolean, boolean, int)
+     * } instead to visit every codepoint.
+     *
+     * @param c codepoint
      * @return
      */
     public boolean isTokenChar(int c);
 
     /**
-     * Extension of {@link TokenizerCallbacks#isTokenChar(int) }. Tokenizer can
-     * break on included chars also, but it is rare.
+     * Extension of {@link TokenizerCallbacks#isTokenChar(int) }. Tokenizer
+     * should be able break on included chars also, but it is rare.
      *
-     * @param isTokenChar
-     * @param c
+     * It is not always called, use {@link TokenizerCallbacks#charListener(boolean, boolean, int)
+     * } instead to visit every codepoint.
+     *
+     * @param c codepoint
      * @return
      */
-    public default boolean isBreakChar(boolean isTokenChar, int c) {
-        return !isTokenChar;
-    }
-
+    public boolean isBreakChar(int c);
 }

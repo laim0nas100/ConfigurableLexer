@@ -11,7 +11,7 @@ import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
 import lt.lb.configurablelexer.lexer.matchers.StringMatcher;
 import lt.lb.configurablelexer.lexer.matchers.KeywordMatcher;
 import lt.lb.configurablelexer.token.base.KeywordToken;
-import lt.lb.configurablelexer.token.base.StringToken;
+import lt.lb.configurablelexer.token.base.BaseStringToken;
 import lt.lb.configurablelexer.token.BaseTokenizer;
 import lt.lb.configurablelexer.token.ConfCharPredicate;
 import lt.lb.configurablelexer.token.ConfToken;
@@ -66,7 +66,7 @@ public class MAINText05 {
                 .enableLineComment("//")
                 .enableMultilineComment("/*", "*/");
 
-        callbacks.setNestedWithin(commentCallback);
+        callbacks.nest(t->commentCallback);
 
         BaseTokenizer tokenizer_with_comments = new BaseTokenizer() {
 
@@ -78,7 +78,7 @@ public class MAINText05 {
 
         SimpleLexer lexer = new SimpleLexer(tokenizer_with_comments) {
             @Override
-            public StringToken<Pos> makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String str) throws Exception {
+            public BaseStringToken<Pos> makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String str) throws Exception {
                 Pos pos = lineListener.getPos(from, str.length());
                 String val = str.substring(from, to);
                 if (matcher.matcher instanceof KeywordMatcher) {
@@ -100,7 +100,7 @@ public class MAINText05 {
             }
 
             @Override
-            public StringToken<Pos> makeLiteral(int from, int to, String str) throws Exception {
+            public BaseStringToken<Pos> makeLiteral(int from, int to, String str) throws Exception {
                 Pos pos = lineListener.getPos(from, str.length());
                 return new LiteralToken<>(str.substring(from, to), pos);
             }

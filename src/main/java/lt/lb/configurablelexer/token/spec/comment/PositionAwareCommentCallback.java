@@ -1,61 +1,106 @@
 package lt.lb.configurablelexer.token.spec.comment;
 
 import java.util.function.IntPredicate;
-import java.util.function.Supplier;
+import lt.lb.configurablelexer.Redirecter;
 import lt.lb.configurablelexer.token.ConfCharPredicate;
 import lt.lb.configurablelexer.token.ConfToken;
-import lt.lb.configurablelexer.token.DelegatingTokenizerCallbacks;
 import lt.lb.configurablelexer.token.TokenizerCallbacks;
+import lt.lb.configurablelexer.token.spec.ExtendedPositionAwareExclusiveCallback;
 
 /**
  *
  * @author laim0nas100
+ * @param <T>
+ * @param <I>
  */
-public abstract class PositionAwareCommentCallback<T extends ConfToken, I> implements DelegatingTokenizerCallbacks<T> {
+public abstract class PositionAwareCommentCallback<T extends ConfToken, I> extends ExtendedPositionAwareExclusiveCallback<T, I> {
 
-    protected TokenizerCallbacks<T> delegate;
     protected LineCommentAwareCallback<T, I> lcac;
     protected LineCommentAwareCallbackString<T, I> lcacs;
     protected MultilineCommentAwareCallback<T, I> mcac;
-    protected TokenizerCallbacks<T> lastDecorated;
 
     public PositionAwareCommentCallback(TokenizerCallbacks<T> delegate) {
-        this.delegate = delegate;
-        this.lastDecorated = delegate;
+        super(delegate);
     }
 
-    public abstract I getPosition();
+    public boolean isIgnoreComments() {
+        return isIgnore();
+    }
+
+    public void setIgnoreComments(final boolean ignoreComments) {
+        setIgnore(ignoreComments);
+    }
+
+    public boolean isExclusiveComments() {
+        return isExclusive();
+    }
+
+    public void setExclusiveComments(boolean exclusiveComments) {
+        setExclusive(exclusiveComments);
+    }
 
     public abstract T contructComment(I start, I end, char[] buffer, int offset, int length) throws Exception;
 
-    public PositionAwareCommentCallback<T, I> enableMultilineComment(String commentStartEnd){
+    @Override
+    public T construct(I start, I end, char[] buffer, int offset, int length) throws Exception {
+        return contructComment(start, end, buffer, offset, length);
+    }
+
+    public PositionAwareCommentCallback<T, I> ignoringComments(boolean ignoreComments) {
+        setIgnoreComments(ignoreComments);
+        return this;
+    }
+
+    public PositionAwareCommentCallback<T, I> enableCommentExclusion(boolean exclusion) {
+        setExclusiveComments(exclusion);
+        return this;
+    }
+
+    public PositionAwareCommentCallback<T, I> enableMultilineComment(String commentStartEnd) {
         return enableMultilineComment(commentStartEnd, commentStartEnd, false);
     }
-    
-    public PositionAwareCommentCallback<T, I> enableMultilineComment(String commentStart, String commentEnd){
+
+    public PositionAwareCommentCallback<T, I> enableMultilineComment(String commentStart, String commentEnd) {
         return enableMultilineComment(commentStart, commentEnd, false);
     }
-    
+
     public PositionAwareCommentCallback<T, I> enableMultilineComment(String commentStart, String commentEnd, boolean ignoreCase) {
         PositionAwareCommentCallback<T, I> me = this;
         if (mcac == null) {
-            mcac = new MultilineCommentAwareCallback<T, I>(lastDecorated) {
-                @Override
-                public I startComment() {
-                    return getPosition();
-                }
+            mcac = this.addNested((e, f) -> {
+                return new MultilineCommentAwareCallback<T, I>(f) {
 
-                @Override
-                public I endComment() {
-                    return getPosition();
-                }
+                    Redirecter.RedirecterSupplier<Boolean> redir;
 
-                @Override
-                public T contructComment(I start, I end, char[] buffer, int offset, int length) throws Exception {
-                    return me.contructComment(start, end, buffer, offset, length);
-                }
-            };
-            lastDecorated = mcac;
+                    @Override
+                    public boolean isDisabled() {
+                        if (redir == null) {
+                            redir = Redirecter.of(() -> e.isDisabled(), () -> super.isDisabled());
+                        }
+                        return redir.get();
+                    }
+
+                    @Override
+                    public I start() {
+                        return e.start();
+                    }
+
+                    @Override
+                    public I mid() {
+                        return e.mid();
+                    }
+
+                    @Override
+                    public I end() {
+                        return e.end();
+                    }
+
+                    @Override
+                    public T construct(I start, I end, char[] buffer, int offset, int length) throws Exception {
+                        return e.construct(start, end, buffer, offset, length);
+                    }
+                };
+            });
         }
         mcac.setIgnoreCase(ignoreCase);
         mcac.setCommentStart(commentStart);
@@ -71,27 +116,42 @@ public abstract class PositionAwareCommentCallback<T extends ConfToken, I> imple
     public PositionAwareCommentCallback<T, I> enableLineComment(String commentStart, boolean ignoreCase) {
         PositionAwareCommentCallback<T, I> me = this;
         if (lcacs == null) {
-            lcacs = new LineCommentAwareCallbackString<T, I>(lastDecorated) {
-                @Override
-                public I startComment() {
-                    return getPosition();
-                }
+            lcacs = this.addNested((e, f) -> {
+                return new LineCommentAwareCallbackString<T, I>(f) {
+                    Redirecter.RedirecterSupplier<Boolean> redir;
 
-                @Override
-                public I endComment() {
-                    return getPosition();
-                }
+                    @Override
+                    public boolean isDisabled() {
+                        if (redir == null) {
+                            redir = Redirecter.of(() -> e.isDisabled(), () -> super.isDisabled());
+                        }
+                        return redir.get();
+                    }
 
-                @Override
-                public T contructComment(I start, I end, char[] buffer, int offset, int length) throws Exception {
-                    return me.contructComment(start, end, buffer, offset, length);
-                }
-            };
-            lastDecorated = lcacs;
+                    @Override
+                    public I start() {
+                        return e.start();
+                    }
+
+                    @Override
+                    public I mid() {
+                        return e.mid();
+                    }
+
+                    @Override
+                    public I end() {
+                        return e.end();
+                    }
+
+                    @Override
+                    public T construct(I start, I end, char[] buffer, int offset, int length) throws Exception {
+                        return e.construct(start, end, buffer, offset, length);
+                    }
+                };
+            });
         }
         lcacs.setCommentStart(commentStart);
         lcacs.setIgnoreCase(ignoreCase);
-
         return this;
     }
 
@@ -102,25 +162,41 @@ public abstract class PositionAwareCommentCallback<T extends ConfToken, I> imple
     public PositionAwareCommentCallback<T, I> enableLineComment(IntPredicate charPredicate) {
         PositionAwareCommentCallback<T, I> me = this;
         if (lcac == null) {
-            lcac = new LineCommentAwareCallback<T, I>(lastDecorated) {
-                @Override
-                public I startComment() {
-                    return getPosition();
-                }
+            lcac = this.addNested((e, f) -> {
+                return new LineCommentAwareCallback<T, I>(f) {
 
-                @Override
-                public I endComment() {
-                    return getPosition();
-                }
+                    Redirecter.RedirecterDisableAware redir;
 
-                @Override
-                public T contructComment(I start, I end, char[] buffer, int offset, int length) throws Exception {
-                    return me.contructComment(start, end, buffer, offset, length);
-                }
-            };
-            lastDecorated = lcac;
+                    @Override
+                    public boolean isDisabled() {
+                        if (redir == null) {
+                            redir = new Redirecter.RedirecterDisableAware(e, () -> super.isDisabled());
+                        }
+                        return redir.isDisabled();
+                    }
+
+                    @Override
+                    public I start() {
+                        return e.start();
+                    }
+
+                    @Override
+                    public I mid() {
+                        return e.mid();
+                    }
+
+                    @Override
+                    public I end() {
+                        return e.end();
+                    }
+
+                    @Override
+                    public T construct(I start, I end, char[] buffer, int offset, int length) throws Exception {
+                        return e.construct(start, end, buffer, offset, length);
+                    }
+                };
+            });
         }
-
         lcac.setCommentStart(charPredicate);
         return this;
     }

@@ -6,7 +6,7 @@ import java.util.function.Function;
  *
  * @author laim0nas100
  */
-public class ProcessedToken<Inf,T> extends StringToken<Inf> {
+public class ProcessedToken<Inf,T> extends BaseStringToken<Inf> {
     
     protected T processedValue;
 
@@ -34,7 +34,7 @@ public class ProcessedToken<Inf,T> extends StringToken<Inf> {
     }
 
     @Override
-    public String toStringValues() {
-        return super.toStringValues() + ", processedValue=" + processedValue;
+    public String stringValues() {
+        return super.stringValues()+ ", processedValue=" + processedValue;
     }
 }

@@ -8,11 +8,15 @@ import java.util.Objects;
  */
 public abstract class IdStringMatcher implements StringMatcher {
 
+    /**
+     *
+     * @param str
+     * @param offset
+     * @param localLength
+     * @return
+     */
     @Override
-    public abstract Match match(String str, int offset, int length);
-
-    @Override
-    public abstract String id();
+    public abstract Match match(String str, int offset, int localLength);
 
     @Override
     public boolean equals(Object obj) {

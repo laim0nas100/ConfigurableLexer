@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lt.lb.commons.DLog;
 import lt.lb.configurablelexer.token.BaseTokenizer;
+import lt.lb.configurablelexer.token.CharInfo;
 import lt.lb.configurablelexer.token.ConfTokenBuffer;
 import lt.lb.configurablelexer.token.ConfTokenizer;
 import lt.lb.configurablelexer.token.simple.Pos;
@@ -19,6 +20,7 @@ import lt.lb.configurablelexer.token.simple.SimpleTokenizer;
  * @author laim0nas100
  */
 public class MAIN {
+    public static final boolean DEBUG = false;
 
     public static void main(String[] args) throws Exception {
 
@@ -48,7 +50,7 @@ public class MAIN {
             }
 
             @Override
-            public void charListener(boolean isTokenChar,boolean isBreakChar, int c) {
+            public void charListener(CharInfo chInfo, int c) {
                 if (lastToken == '\n') {// assuming we break on new line, so one token later
                     line++;
                     col = 0;

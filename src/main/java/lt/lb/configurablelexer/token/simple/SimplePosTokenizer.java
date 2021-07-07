@@ -4,6 +4,7 @@ import java.io.Reader;
 import java.util.Objects;
 import java.util.function.IntPredicate;
 import lt.lb.configurablelexer.token.BaseTokenizer;
+import lt.lb.configurablelexer.token.CharInfo;
 import lt.lb.configurablelexer.token.ConfTokenBuffer;
 import lt.lb.configurablelexer.token.ConfTokenizer;
 import lt.lb.configurablelexer.token.spec.LineAwareCharListener;
@@ -29,8 +30,8 @@ public class SimplePosTokenizer extends BaseTokenizer<SimplePosToken> {
     }
 
     @Override
-    public void charListener(boolean isTokenChar, boolean isBreakChar, int c) {
-        lineAware.listen(isTokenChar,isBreakChar, c);
+    public void charListener(CharInfo chInfo, int c) {
+        lineAware.charListener(chInfo, c);
         // must provide some implementation to prevent infinite recursion
     }
 

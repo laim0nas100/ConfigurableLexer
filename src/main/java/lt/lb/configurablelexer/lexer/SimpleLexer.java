@@ -4,11 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import lt.lb.commons.DLog;
+import lt.lb.configurablelexer.lexer.matchers.Match.PartialMatch;
 import lt.lb.configurablelexer.lexer.matchers.StringMatcher;
 import lt.lb.configurablelexer.lexer.matchers.StringMatcher.MatcherMatch;
-import lt.lb.configurablelexer.lexer.matchers.StringMatcher.PartialMatch;
-import lt.lb.configurablelexer.lexer.matchers.StringMatcher.PositiveMatch;
 import lt.lb.configurablelexer.token.ConfToken;
 import lt.lb.configurablelexer.token.ConfTokenBuffer;
 import lt.lb.configurablelexer.token.ConfTokenizer;
@@ -54,37 +53,43 @@ public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T> {
         while (moreMatches && processed < last) {
             final int localLen = last - processed;
             final int localOffset = processed;
+//            DLog.print("First find");
             Optional<MatcherMatch> optMatch = matchers.stream()
                     .filter(m -> m.minSize() <= localLen)
                     .map(m -> new MatcherMatch(m, m.match(string, localOffset, localLen)))
+                    //                    .peek(m -> DLog.print(m))
                     .filter(m -> m.match.isPostive())
                     .sorted(MatcherMatch.cmpMatcherMatch)
                     .findFirst();
 
             if (!optMatch.isPresent()) {
-                lexemes.add(makeLiteral(processed, last, string));
+                lexemes.add(makeLiteral(localOffset, last, string));
                 moreMatches = false;
             } else { // have matches
 
                 MatcherMatch first = optMatch.get();
                 if (first.match.isFull()) {// best case
-                    lexemes.add(makeLexeme(processed, last, first, string));
+                    lexemes.add(makeLexeme(localOffset, last, first, string));
                     moreMatches = false;
 
                 } else if (first.match.isPartial()) {
                     PartialMatch p = (PartialMatch) first.match;
                     if (first.match.isBreaking()) {
-
-                        //start slice was not match, so it must be literal
-                        lexemes.add(makeLiteral(processed, p.from, string));
+                        //can be a literal, if not empty
+                        if (p.from > localOffset) {
+                            lexemes.add(makeLiteral(localOffset, p.from, string));
+                        }
                         lexemes.add(makeLexeme(p.from, p.to, first, string));
                         processed = p.to;
                     } else {
 
+                        final int tempLocalLen = last - p.to;
+//                        DLog.print("Find first breaking");
                         Optional<MatcherMatch> firstBreaking = matchers.stream()
-                                .filter(m -> m.minSize() <= localLen)
+                                .filter(m -> m.minSize() <= tempLocalLen)
                                 .filter(m -> m.canBeBreaking())
-                                .map(m -> new MatcherMatch(m, m.match(string, p.to, localLen)))
+                                .map(m -> new MatcherMatch(m, m.match(string, p.to, tempLocalLen)))
+                                //                                .peek(m -> DLog.print(m))
                                 .filter(m -> m.match.isPostive() && m.match.isBreaking())
                                 .sorted(MatcherMatch.cmpMatcherMatch)
                                 .findFirst();
@@ -102,24 +107,29 @@ public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T> {
                                     lexemes.add(makeLexeme(p.to, p2.to, get, string));
                                     processed = p2.to;
                                 } else {// inexact cut mark
-                                    final int startingSliceLen = p2.to - processed;
+                                    final int startingSliceLen = p2.from - processed;
+//                                    DLog.print("Find startingSliceFull");
                                     Optional<MatcherMatch> startingSliceFull = matchers.stream()
                                             .filter(m -> m.minSize() >= startingSliceLen)
                                             .map(m -> new MatcherMatch(m, m.match(string, localOffset, startingSliceLen)))
+                                            //                                            .peek(m -> DLog.print(m))
                                             .filter(m -> m.match.isPostive() && m.match.isFull())
                                             .sorted(MatcherMatch.cmpMatcherMatch)
                                             .findFirst();
 
                                     if (startingSliceFull.isPresent()) {
                                         MatcherMatch slice = startingSliceFull.get();
-                                        lexemes.add(makeLexeme(processed, p2.from, slice, string));
+                                        lexemes.add(makeLexeme(localOffset, localOffset + startingSliceLen, slice, string));
 
                                     } else {// just make literal
-                                        lexemes.add(makeLiteral(p.from, p2.from, string));
+                                        lexemes.add(makeLiteral(localOffset, localOffset + startingSliceLen, string));
                                     }
                                     lexemes.add(makeLexeme(p2.from, p2.to, get, string));
                                     processed = p2.to;
                                 }
+                            } else {
+                                throw new IllegalArgumentException("Unsupported matcher " + get);
+//                                DLog.print("WJHAT");
                             }
                         } else {// not possible to break, treat as literal
                             lexemes.add(makeLiteral(processed, last, string));
@@ -129,6 +139,7 @@ public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T> {
                 }
 
             }
+//            DLog.print(lexemes);
         }
 
         return ConfTokenBuffer.ofList(lexemes);

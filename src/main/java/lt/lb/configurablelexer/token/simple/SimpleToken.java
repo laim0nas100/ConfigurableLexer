@@ -1,12 +1,12 @@
 package lt.lb.configurablelexer.token.simple;
 
-import lt.lb.configurablelexer.token.base.StringToken;
+import lt.lb.configurablelexer.token.base.BaseStringToken;
 
 /**
  *
  * @author laim0nas100
  */
-public class SimpleToken<T> extends StringToken<T> {
+public class SimpleToken<T> extends BaseStringToken<T> {
 
     public SimpleToken() {
     }

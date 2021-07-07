@@ -29,4 +29,14 @@ public abstract class BreakingSerStringMatcher extends IdStringMatcher {
         return isBreaking() ? Match.matchBreak(from, to) : Match.match(from, to);
     }
 
+    @Override
+    public String stringValues() {
+        return "breaking=" + breaking;
+    }
+
+    @Override
+    public String toString() {
+        return descriptiveString();
+    }
+
 }

@@ -1,5 +1,6 @@
 package lt.lb.configurablelexer.token.spec;
 
+import lt.lb.configurablelexer.token.CharInfo;
 import lt.lb.configurablelexer.token.CharListener;
 import lt.lb.configurablelexer.token.simple.Pos;
 
@@ -21,7 +22,10 @@ public class LineAwareCharListener implements CharListener {
     }
 
     @Override
-    public void listen(boolean isTokenChar, boolean isBreakChar, int c) {
+    public void charListener(CharInfo chInfo, int c) {
+         if (isDisabled()) {
+            return;
+        }
         if (lastChar == '\n') {// reaction one token char later assuming we break on new line
             line++;
             column = 0;

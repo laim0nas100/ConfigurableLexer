@@ -10,10 +10,10 @@ public interface DelegatingTokenizerCallbacks<T extends ConfToken> extends Token
     public default void reset() {
         delegate().reset();
     }
-
+    
     @Override
-    public default void charListener(boolean isTokenChar, boolean isBreakChar, int c) {
-        delegate().charListener(isTokenChar, isBreakChar, c);
+    public default void charListener(CharInfo chInfo, int c) {
+        delegate().charListener(chInfo, c);
     }
 
     @Override
@@ -22,14 +22,20 @@ public interface DelegatingTokenizerCallbacks<T extends ConfToken> extends Token
     }
 
     @Override
-    public default boolean isBreakChar(boolean isTokenChar, int c) {
-        return delegate().isBreakChar(isTokenChar, c);
+    public default boolean isBreakChar(int c) {
+        return delegate().isBreakChar(c);
     }
 
     @Override
     public default ConfTokenBuffer<T> constructTokens(char[] buffer, int offset, int length) throws Exception {
         return delegate().constructTokens(buffer, offset, length);
     }
+
+    @Override
+    public default boolean isDisabled(){
+        return delegate().isDisabled();
+    }
+    
     
     
     public TokenizerCallbacks<T> delegate();

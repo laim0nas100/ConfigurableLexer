@@ -11,7 +11,7 @@ import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
 import lt.lb.configurablelexer.lexer.matchers.StringMatcher;
 import lt.lb.configurablelexer.lexer.matchers.KeywordMatcher;
 import lt.lb.configurablelexer.token.base.KeywordToken;
-import lt.lb.configurablelexer.token.base.StringToken;
+import lt.lb.configurablelexer.token.base.BaseStringToken;
 import lt.lb.configurablelexer.token.BaseTokenizer;
 import lt.lb.configurablelexer.token.ConfCharPredicate;
 import lt.lb.configurablelexer.token.ConfToken;
@@ -38,9 +38,9 @@ public class MAINText06 {
 
     public static void main(String[] args) throws Exception {
         DLog main = DLog.main();
-        main.async = false;
+        main.async = true;
         main.stackTrace = false;
-        main.surroundString = false;
+        main.surroundString = true;
         main.threadName = false;
         DLog.useTimeFormat(main, "HH:mm:ss.SSS ");
         Reader input = new FileReader(new File("parse_text.txt"), StandardCharsets.UTF_8);
@@ -53,22 +53,11 @@ public class MAINText06 {
                 .setTokenCharPredicate(
                         new ConfCharPredicate().disallowWhen(Character::isWhitespace)
                 )
-                .addListener(lineListener)
-                .nest(t -> {
-                    return new PosAwareCommentCallback<ConfToken>(lineListener,t) {
-                        @Override
-                        public ConfToken contructComment(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
-                            return new CommentToken(String.valueOf(buffer, offset, length), start);
-                        }
-                    }
-                            .enableLineComment('#', '$')
-                            .enableLineComment("//")
-                            .enableMultilineComment("/*", "*/");
-                });
+                .addListener(lineListener);
 
         SimpleLexer lexer = new SimpleLexer(tokenizer) {
             @Override
-            public StringToken<Pos> makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String str) throws Exception {
+            public BaseStringToken<Pos> makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String str) throws Exception {
                 Pos pos = lineListener.getPos(from, str.length());
                 String val = str.substring(from, to);
                 if (matcher.matcher instanceof KeywordMatcher) {
@@ -90,13 +79,30 @@ public class MAINText06 {
             }
 
             @Override
-            public StringToken<Pos> makeLiteral(int from, int to, String str) throws Exception {
+            public BaseStringToken<Pos> makeLiteral(int from, int to, String str) throws Exception {
                 Pos pos = lineListener.getPos(from, str.length());
                 return new LiteralToken<>(str.substring(from, to), pos);
             }
         };
 
-        tokenizer.getCallbacks().setConstructor(lexer);
+        tokenizer.getCallbacks().nest(t -> lexer);
+        tokenizer.getCallbacks().nest(t -> {
+            return new PosAwareCommentCallback<ConfToken, Pos>(t, lineListener::getPos) {
+                @Override
+                public ConfToken contructComment(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
+                    return new CommentToken(String.valueOf(buffer, offset, length), start);
+                }
+            }
+                    .enableLineComment('#', '$')
+                    .enableLineComment("//")
+                    .enableMultilineComment("/*", "*/")
+                    .enableCommentExclusion(true)
+                    .ignoringComments(false);
+        });
+
+        tokenizer.getCallbacks().addListener((info, c) -> {
+//            DLog.print(info,Character.toString(c));
+        });
 
         lexer.addMatcher(new KeywordMatcher("labas"));
         lexer.addMatcher(new IntegerMatcher());
@@ -104,8 +110,10 @@ public class MAINText06 {
         lexer.addMatcher(new KeywordMatcher("+", true));
         lexer.addMatcher(new KeywordMatcher("++", true));
         lexer.addMatcher(new KeywordMatcher(";", true));
+        lexer.addMatcher(new KeywordMatcher("int", false));
+        lexer.addMatcher(new KeywordMatcher("float", false));
 
-        ConfTokenizer myTokenizer = lexer;
+        ConfTokenizer myTokenizer = tokenizer;
         myTokenizer.reset(input);
         myTokenizer.produceTokens(t -> {
             DLog.print(t);

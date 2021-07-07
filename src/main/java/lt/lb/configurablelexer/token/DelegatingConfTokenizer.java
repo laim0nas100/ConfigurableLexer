@@ -1,6 +1,7 @@
 package lt.lb.configurablelexer.token;
 
 import java.io.Reader;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -28,8 +29,8 @@ public interface DelegatingConfTokenizer<T extends ConfToken> extends ConfTokeni
     public ConfTokenizer<T> delegate();
 
     @Override
-    public default void charListener(boolean isTokenChar,boolean isBreakChar, int c) {
-        delegate().charListener(isTokenChar,isBreakChar, c);
+    public default void charListener(CharInfo chInfo, int c) {
+        delegate().charListener(chInfo, c);
     }
 
     @Override
@@ -46,6 +47,28 @@ public interface DelegatingConfTokenizer<T extends ConfToken> extends ConfTokeni
     public default boolean isTokenChar(int c) {
         return delegate().isTokenChar(c);
     }
+
+    @Override
+    public default boolean isBreakChar(int c) {
+        return delegate().isBreakChar(c);
+    }
+
+    @Override
+    public default void reset(String string){
+        delegate().reset(string);
+    }
+
+    @Override
+    public default void reset(){
+        delegate().reset();
+    }
+
+    @Override
+    public default boolean isDisabled(){
+        return delegate().isDisabled();
+    }
+    
+    
 
     @Override
     public default boolean readToBuffer() throws Exception {

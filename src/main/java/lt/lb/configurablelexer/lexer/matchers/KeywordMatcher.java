@@ -45,18 +45,19 @@ public class KeywordMatcher extends BreakingSerStringMatcher {
     }
 
     @Override
-    public Match match(String str, int offset, int length) {
+    public Match match(String str, int offset, int localLength) {
         int index = -1;
+        int realLen = offset + localLength;
         if (ignoreCase) {
             index = StringUtils.indexOfIgnoreCase(str, getKeyword(), offset);
         } else {
             index = StringUtils.indexOf(str, getKeyword(), offset);
         }
-        if (index == -1 || index + getKeyword().length() > length) {
+        if (index == -1 || index + getKeyword().length() > realLen) {
             return Match.noMatch();
         }
         int len = getKeyword().length();
-        if (index == offset && len == length) {
+        if (index == offset && len == localLength) {
             return makeMatch();
         }else{
             int to = index + len;
@@ -75,8 +76,10 @@ public class KeywordMatcher extends BreakingSerStringMatcher {
     }
 
     @Override
-    public String id() {
-        return  getClass().getName() +getKeyword()+ (breaking ? ":breaking:":"") + (ignoreCase ? ":ignoreCase:":"");
+    public String stringValues() {
+        return super.stringValues()+", keyword="+keyword+", ignoreCase="+ignoreCase;
     }
+
+    
 
 }

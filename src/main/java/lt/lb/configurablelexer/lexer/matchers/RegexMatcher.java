@@ -4,6 +4,7 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lt.lb.commons.DLog;
+import lt.lb.configurablelexer.Id;
 
 /**
  *
@@ -14,7 +15,7 @@ public class RegexMatcher extends BreakingSerStringMatcher {
     protected Pattern pattern;
 
     @Override
-    public Match match(String str, int offset, int length) {
+    public Match match(String str, int offset, int localLength) {
         Objects.requireNonNull(pattern, "Pattern was not set");
         Matcher matcher = pattern.matcher(str);
 
@@ -27,18 +28,13 @@ public class RegexMatcher extends BreakingSerStringMatcher {
         int start = matcher.start();
         int end = matcher.end();
         int len = end - start;
-        if (start == offset && len == length) {
+        if (start == offset && len == localLength) {
             return makeMatch();
-        } else if (len > length) {
+        } else if (len > localLength) {
             return Match.noMatch();
         } else {
             return makeMatch(start, end);
         }
-    }
-
-    @Override
-    public String id() {
-        return getClass().getName() + (breaking ? ":breaking:" : "");
     }
 
     public Pattern getPattern() {
@@ -48,5 +44,12 @@ public class RegexMatcher extends BreakingSerStringMatcher {
     public void setPattern(Pattern pattern) {
         this.pattern = pattern;
     }
+
+    @Override
+    public String stringValues() {
+        return super.stringValues()+ ", pattern="+pattern.pattern();
+    }
+    
+    
 
 }

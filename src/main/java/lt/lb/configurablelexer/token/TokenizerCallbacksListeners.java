@@ -16,9 +16,9 @@ public interface TokenizerCallbacksListeners<T extends ConfToken> extends Tokeni
     }
 
     @Override
-    public default void charListener(boolean isTokenChar, boolean isBreakChar, int c) {
+    public default void charListener(CharInfo chInfo, int c) {
         for(CharListener listener:listeners()){
-            listener.listen(isTokenChar, isBreakChar, c);
+            listener.charListener(chInfo, c);
         }
     }
     

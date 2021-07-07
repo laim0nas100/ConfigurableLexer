@@ -1,5 +1,7 @@
 package lt.lb.configurablelexer.token.spec.comment;
 
+import lt.lb.commons.DLog;
+import lt.lb.configurablelexer.token.CharInfo;
 import lt.lb.configurablelexer.token.ConfToken;
 import lt.lb.configurablelexer.token.ConfTokenBuffer;
 import lt.lb.configurablelexer.token.TokenizerCallbacks;
@@ -17,50 +19,63 @@ public abstract class MultilineCommentAwareCallback<T extends ConfToken, PosInfo
     protected String commentEnd = "*/";
 
     protected boolean ignoreCase = false;
-    protected StringBuilder commentStartBuffer = new StringBuilder();
-    protected StringBuilder commentEndingBuffer = new StringBuilder();
+    protected StringBuilder commentBufferStart = new StringBuilder();
+    protected StringBuilder commentBufferEnd = new StringBuilder();
 
     public MultilineCommentAwareCallback(TokenizerCallbacks<T> delegate) {
         super(delegate);
     }
 
+
     @Override
-    public void reset() {
-        commentEndingBuffer.setLength(0);
-        commentStartBuffer.setLength(0);
-        super.reset();
+    public void resetInternalState() {
+        super.resetInternalState();
+        commentBufferEnd.setLength(0);
+        commentBufferStart.setLength(0);
     }
-
+    
     @Override
-    public void charListener(boolean isTokenChar, boolean isBreakChar, int c) {
-        if (withinComment) {
-
-            if (tryMatchNewBeginningAndClear(ignoreCase, commentEndingBuffer, commentEnd, c)) {
-                withinComment = false;
-                lastCommentEndInfo = endComment();
-                constructComment = true;
-            }
-
+    public void charListener(CharInfo chInfo, int c) {
+        if (isDisabled()) {
+            super.charListener(chInfo, c);
+            return;
         }
-        if (!withinComment && !constructComment) {
-            if (tryMatchNewBeginningAndClear(ignoreCase, commentStartBuffer, commentStart, c)) {
-                withinComment = true;
-                lastCommentStartInfo = startComment();
+        if (within) {
+            if (tryMatchNewBeginningAndClear(ignoreCase, commentBufferEnd, commentEnd, c)) {
+                within = false;
+//                 DLog.print("END MultilineCommentAwareCallback");
+                lastEndInfo = end();
+                construct = true;
             }
         }
+        if (!within && !construct) {
+            if (tryMatchNewBeginningAndClear(ignoreCase, commentBufferStart, commentStart, c)) {
+                within = true;
+//                 DLog.print("START MultilineCommentAwareCallback");
+                lastStartInfo = start();
+            }
+        }
 
-        delegate().charListener(isTokenChar, isBreakChar, c);
-    }
-
-    @Override
-    public boolean isBreakChar(boolean isTokenChar, int c) {
-        return !withinComment || delegate().isBreakChar(isTokenChar, c);
+        super.charListener(chInfo, c);
     }
 
     @Override
     public boolean isTokenChar(int c) {
-        return withinComment || delegate().isTokenChar(c);
+        if(isDisabled()){
+            return super.isTokenChar(c);
+        }
+        return within || super.isTokenChar(c);
     }
+
+    @Override
+    public boolean isBreakChar(int c) {
+        if(isDisabled()){
+            return super.isBreakChar(c);
+        }
+        return super.isBreakChar(c) || tryMatchBeginning(ignoreCase, commentBufferEnd, commentEnd, c);
+    }
+    
+    
 
     public String getCommentStart() {
         return commentStart;
