@@ -22,11 +22,9 @@ import lt.lb.configurablelexer.token.TokenizerCallbacks;
 import lt.lb.configurablelexer.token.base.CommentToken;
 import lt.lb.configurablelexer.token.base.LiteralToken;
 import lt.lb.configurablelexer.token.base.NumberToken;
+import lt.lb.configurablelexer.token.base.StringToken;
 import lt.lb.configurablelexer.token.simple.Pos;
-import lt.lb.configurablelexer.token.spec.comment.LineCommentAwareCallback;
-import lt.lb.configurablelexer.token.spec.comment.LineCommentAwareCallbackString;
-import lt.lb.configurablelexer.token.spec.comment.MultilineCommentAwareCallback;
-import lt.lb.configurablelexer.token.spec.comment.PositionAwareCommentCallback;
+import lt.lb.configurablelexer.token.spec.PositionAwareDefaultCallback;
 
 /**
  *
@@ -51,22 +49,28 @@ public class MAINText05 {
 
         callbacks.addListener(lineListener);
 
-        PositionAwareCommentCallback<ConfToken, Pos> commentCallback = new PositionAwareCommentCallback<ConfToken, Pos>(callbacks) {
+        PositionAwareDefaultCallback<ConfToken, Pos> commentCallback = new PositionAwareDefaultCallback<ConfToken, Pos>(callbacks) {
+            @Override
+            public ConfToken contructComment(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
+                return new CommentToken(String.valueOf(buffer, offset, length), start);
+            }
+
+            @Override
+            public ConfToken contructString(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
+                return new StringToken(String.valueOf(buffer, offset, length), start);
+            }
+
             @Override
             public Pos getPosition() {
                 return lineListener.getPos();
             }
 
-            @Override
-            public ConfToken contructComment(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
-                return new CommentToken(String.valueOf(buffer, offset, length), start);
-            }
         }
                 .enableLineComment('#', '$')
                 .enableLineComment("//")
                 .enableMultilineComment("/*", "*/");
 
-        callbacks.nest(t->commentCallback);
+        callbacks.nest(t -> commentCallback);
 
         BaseTokenizer tokenizer_with_comments = new BaseTokenizer() {
 
@@ -117,7 +121,7 @@ public class MAINText05 {
 
         ConfTokenizer myTokenizer = lexer;
         myTokenizer.reset(input);
-        myTokenizer.produceTokens(t -> {
+        myTokenizer.produceItems(t -> {
             DLog.print(t);
         });
         input.close();

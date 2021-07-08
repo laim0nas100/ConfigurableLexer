@@ -19,25 +19,25 @@ public abstract class BufferedConfTokenizer<T extends ConfToken> implements Conf
     }
 
     @Override
-    public boolean hasCurrentBufferedToken() throws Exception {
+    public boolean hasCurrentBufferedItem() {
         return bufferedTokens.size() > currentTokenIndex;
     }
 
     @Override
-    public T getCurrentBufferedToken() throws Exception {
+    public T getCurrentBufferedItem() throws Exception {
         return bufferedTokens.get(currentTokenIndex);
     }
 
     @Override
-    public boolean hasNextBufferedToken() {
+    public boolean hasNextBufferedItem() {
         return bufferedTokens.size() > currentTokenIndex +1;
     }
 
     @Override
-    public T getNextBufferedToken() throws Exception {
+    public T getNextBufferedItem() throws Exception {
         if (this.bufferedTokens.size() > this.currentTokenIndex + 1) {
             this.currentTokenIndex++;
-            return getCurrentBufferedToken();
+            return getCurrentBufferedItem();
         }
         throw new IllegalStateException("Need to read from input, no more buffered tokens left");
     }

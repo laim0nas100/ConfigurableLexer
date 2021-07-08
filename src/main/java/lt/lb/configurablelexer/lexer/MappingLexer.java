@@ -46,20 +46,20 @@ public abstract class MappingLexer<T extends ConfToken,O extends ConfToken> impl
     }
 
    @Override
-    public T getCurrentBufferedToken() throws Exception {
+    public T getCurrentBufferedItem() throws Exception {
         return this.bufferedTokens.get(this.currentTokenIndex);
     }
 
     @Override
-    public boolean hasNextBufferedToken() {
+    public boolean hasNextBufferedItem() {
         return this.bufferedTokens.size() > this.currentTokenIndex + 1;
     }
 
     @Override
-    public T getNextBufferedToken() throws Exception {
+    public T getNextBufferedItem() throws Exception {
         if (this.bufferedTokens.size() > this.currentTokenIndex + 1) {
             this.currentTokenIndex++;
-            return getCurrentBufferedToken();
+            return getCurrentBufferedItem();
         }
         throw new IllegalStateException("Need to read from input, no more buffered tokens left");
     }

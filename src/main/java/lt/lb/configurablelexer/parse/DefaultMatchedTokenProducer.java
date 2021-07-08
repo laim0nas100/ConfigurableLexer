@@ -70,13 +70,13 @@ public class DefaultMatchedTokenProducer implements MatchedTokenProducer {
         if(error != null){
             return false;
         }
-        if (localToken != null || tokenizer.hasNextBufferedToken()) {
+        if (localToken != null || tokenizer.hasNextBufferedItem()) {
             return true;
         } else {
 
             boolean read = tokenizer.readToBuffer();
             if (read) {
-                localToken = tokenizer.getCurrentBufferedToken();
+                localToken = tokenizer.getCurrentBufferedItem();
             }
             return read;
         }
@@ -90,7 +90,7 @@ public class DefaultMatchedTokenProducer implements MatchedTokenProducer {
             while ((hasNext()) && !toCheck.isEmpty()) {
                 ConfToken next = null;
                 if (localToken == null) {
-                    next = tokenizer.getNextBufferedToken();
+                    next = tokenizer.getNextBufferedItem();
                     localToken = next;
 
                 } else {

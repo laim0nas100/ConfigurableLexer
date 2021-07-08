@@ -171,7 +171,7 @@ public class MAINText04 {
 
         ConfTokenizer myTokenizer = lexer;
         myTokenizer.reset(input);
-        myTokenizer.produceTokens(t -> {
+        myTokenizer.produceItems(t -> {
             DLog.print(t);
         });
         input.close();

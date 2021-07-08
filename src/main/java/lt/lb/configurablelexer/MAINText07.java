@@ -23,13 +23,14 @@ import lt.lb.configurablelexer.token.base.NumberToken;
 import lt.lb.configurablelexer.token.base.StringToken;
 import lt.lb.configurablelexer.token.simple.Pos;
 import lt.lb.configurablelexer.token.spec.comment.PosAwareDefaultCallback;
+import lt.lb.configurablelexer.token.spec.string.StringAwareCallback;
 import lt.lb.configurablelexer.utils.BufferedIterator.SimplifiedBufferedIterator;
 
 /**
  *
  * @author laim0nas100
  */
-public class MAINText06 {
+public class MAINText07 {
 
     public static void main(String[] args) throws Exception {
         DLog main = DLog.main();
@@ -38,7 +39,7 @@ public class MAINText06 {
         main.surroundString = true;
         main.threadName = false;
         DLog.useTimeFormat(main, "HH:mm:ss.SSS ");
-        Reader input = new FileReader(new File("parse_text_1.txt"), StandardCharsets.UTF_8);
+        Reader input = new FileReader(new File("parse_text_strings.txt"), StandardCharsets.UTF_8);
 
         DefaultConfTokenizer<ConfToken> tokenizer = new DefaultConfTokenizer();
 
@@ -82,7 +83,7 @@ public class MAINText06 {
 
         tokenizer.getCallbacks().nest(t -> lexer);
         tokenizer.getCallbacks().nest(t -> {
-             return new PosAwareDefaultCallback<ConfToken, Pos>(t, lineListener::getPos) {
+            return new PosAwareDefaultCallback<ConfToken, Pos>(t, lineListener::getPos) {
                 @Override
                 public ConfToken contructComment(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
                     return new CommentToken(String.valueOf(buffer, offset, length), start);
@@ -96,9 +97,33 @@ public class MAINText06 {
                     .enableLineComment('#', '$')
                     .enableLineComment("//")
                     .enableMultilineComment("/*", "*/")
+                    .enableStrings()
                     .enableExclusion(true)
                     .ignoringOnlyComments(false);
         });
+//        tokenizer.getCallbacks().nest(t->{
+//            return new StringAwareCallback<ConfToken, Pos>(t) {
+//                @Override
+//                public ConfToken construct(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
+//                    return new StringToken<>(String.valueOf(buffer, offset, length),start);
+//                }
+//
+//                @Override
+//                public Pos start() {
+//                    return lineListener.getPos();
+//                }
+//
+//                @Override
+//                public Pos end() {
+//                    return lineListener.getPos();
+//                }
+//
+//                @Override
+//                public Pos mid() {
+//                    return lineListener.getPos();
+//                }
+//            };
+//        });
 
         tokenizer.getCallbacks().addListener((info, c) -> {
 //            DLog.print(info,Character.toString(c));

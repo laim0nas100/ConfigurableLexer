@@ -34,8 +34,8 @@ public interface DelegatingConfTokenizer<T extends ConfToken> extends ConfTokeni
     }
 
     @Override
-    public default void produceTokens(Consumer<T> consumer) throws Exception {
-        delegate().produceTokens(consumer);
+    public default void produceItems(Consumer<T> consumer) throws Exception {
+        delegate().produceItems(consumer);
     }
     
     @Override
@@ -76,18 +76,18 @@ public interface DelegatingConfTokenizer<T extends ConfToken> extends ConfTokeni
     }
 
     @Override
-    public default T getCurrentBufferedToken() throws Exception {
-        return delegate().getCurrentBufferedToken();
+    public default T getCurrentBufferedItem() throws Exception {
+        return delegate().getCurrentBufferedItem();
     }
 
     @Override
-    public default boolean hasNextBufferedToken() {
-        return delegate().hasNextBufferedToken();
+    public default boolean hasNextBufferedItem() {
+        return delegate().hasNextBufferedItem();
     }
 
     @Override
-    public default T getNextBufferedToken() throws Exception {
-        return delegate().getNextBufferedToken();
+    public default T getNextBufferedItem() throws Exception {
+        return delegate().getNextBufferedItem();
     }
 
     @Override
@@ -96,8 +96,8 @@ public interface DelegatingConfTokenizer<T extends ConfToken> extends ConfTokeni
     }
 
     @Override
-    public default boolean hasCurrentBufferedToken() throws Exception {
-        return delegate().hasCurrentBufferedToken();
+    public default boolean hasCurrentBufferedItem(){
+        return delegate().hasCurrentBufferedItem();
     }
 
     @Override

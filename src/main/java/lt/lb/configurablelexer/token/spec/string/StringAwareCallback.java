@@ -1,19 +1,16 @@
 package lt.lb.configurablelexer.token.spec.string;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.IntPredicate;
-import lt.lb.configurablelexer.token.BaseDelegatingTokenizerCallbacks;
 import lt.lb.configurablelexer.token.CharInfo;
 import lt.lb.configurablelexer.token.ConfToken;
-import lt.lb.configurablelexer.token.ConfTokenBuffer;
 import lt.lb.configurablelexer.token.TokenizerCallbacks;
+import lt.lb.configurablelexer.token.spec.ExtendedPositionAwareSplittableCallbackBase;
 
 /**
  *
  * @author laim0nas100
  */
-public abstract class StringAwareCallback<T extends ConfToken, PosInfo> extends BaseDelegatingTokenizerCallbacks<T> {
+public abstract class StringAwareCallback<T extends ConfToken, PosInfo> extends ExtendedPositionAwareSplittableCallbackBase<T,PosInfo> {
 
     public StringAwareCallback(TokenizerCallbacks<T> delegate) {
         super(delegate);
@@ -26,13 +23,15 @@ public abstract class StringAwareCallback<T extends ConfToken, PosInfo> extends 
     protected IntPredicate stringEnd = c -> c == '"';
     protected IntPredicate stringEscape = c -> c == '\\';
 
-    protected PosInfo lastStringStartInfo;
-    protected PosInfo lastStringEndInfo;
-    protected boolean earlyReturn;
-    protected List<T> unsubmittedStrings = new ArrayList<>();
-    protected boolean withinString;
     protected boolean escapeNextChar;
-    protected boolean constructString;
+
+    @Override
+    public void resetInternalState() {
+        super.resetInternalState();
+        escapeNextChar = false;
+    }
+    
+    
 
     @Override
     public void charListener(CharInfo chInfo, int c) {
@@ -40,60 +39,57 @@ public abstract class StringAwareCallback<T extends ConfToken, PosInfo> extends 
             super.charListener(chInfo, c);
             return;
         }
-        if (withinString) {
+        if (within) {
             if (escapeNextChar) {
                 escapeNextChar = false;
             } else if (stringEnd.test(c)) {
-                withinString = false;
-                constructString = true;
-                lastStringEndInfo = endString();
+                within = false;
+                construct = true;
+                lastEndInfo = end();
             } else if (stringEscape.test(c)) {
                 escapeNextChar = true;
             }
         } else if (stringStart.test(c)) {
-            withinString = true;
-            lastStringStartInfo = startString();
+            within = true;
+            lastStartInfo = start();
         }
         super.charListener(chInfo, c);
     }
 
-    public abstract PosInfo startString();
-
-    public abstract PosInfo endString();
-
-    @Override
-    public ConfTokenBuffer<T> constructTokens(char[] buffer, int offset, int length) throws Exception {
-        if (withinString) {// early token split
-            // not yet out of string, split the string, return only when fully read the string
-            unsubmittedStrings.add(constructString(lastStringStartInfo, lastStringEndInfo, buffer, offset, length));
-            if (earlyReturn) {
-                ConfTokenBuffer<T> ofList = ConfTokenBuffer.ofList(new ArrayList<>(unsubmittedStrings));
-                unsubmittedStrings.clear();
-                return ofList;
-            }
-            return ConfTokenBuffer.empty();
-        } else if (constructString) {
-            unsubmittedStrings.add(constructString(lastStringStartInfo, lastStringEndInfo, buffer, offset, length));
-            constructString = false;
-            ConfTokenBuffer<T> ofList = ConfTokenBuffer.ofList(new ArrayList<>(unsubmittedStrings));
-            unsubmittedStrings.clear();
-            return ofList;
-
-        } else {
-            return super.constructTokens(buffer, offset, length);
-        }
-    }
-
     @Override
     public boolean isTokenChar(int c) {
-        return withinString || super.isTokenChar(c);
+        return within || super.isTokenChar(c);
     }
 
     @Override
     public boolean isBreakChar(int c) {
-        return !withinString && super.isBreakChar( c);
+        return !within && super.isBreakChar( c);
     }
 
-    public abstract T constructString(PosInfo start, PosInfo end, char[] buffer, int offset, int length) throws Exception;
+    public IntPredicate getStringStart() {
+        return stringStart;
+    }
+
+    public void setStringStart(IntPredicate stringStart) {
+        this.stringStart = stringStart;
+    }
+
+    public IntPredicate getStringEnd() {
+        return stringEnd;
+    }
+
+    public void setStringEnd(IntPredicate stringEnd) {
+        this.stringEnd = stringEnd;
+    }
+
+    public IntPredicate getStringEscape() {
+        return stringEscape;
+    }
+
+    public void setStringEscape(IntPredicate stringEscape) {
+        this.stringEscape = stringEscape;
+    }
+    
+    
 
 }

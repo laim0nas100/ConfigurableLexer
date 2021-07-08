@@ -2,11 +2,8 @@ package lt.lb.configurablelexer.token.spec;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.stream.Stream;
 import lt.lb.configurablelexer.DisableAware;
 import lt.lb.configurablelexer.token.ConfToken;
 import lt.lb.configurablelexer.token.ConfTokenBuffer;
@@ -19,7 +16,7 @@ import lt.lb.configurablelexer.token.TokenizerCallbacks;
  * @param <T>
  * @param <I>
  */
-public abstract class ExtendedPositionAwareExclusiveCallback<T extends ConfToken, I> implements DelegatingTokenizerCallbacks<T> {
+public abstract class ExtendedPositionAwareExclusiveCallbackAggregate<T extends ConfToken, I> implements DelegatingTokenizerCallbacks<T> {
 
     protected TokenizerCallbacks<T> delegate;
     protected List<ExtendedPositionAwareSplittableCallback<T, I>> callbacks = new ArrayList<>();
@@ -30,7 +27,7 @@ public abstract class ExtendedPositionAwareExclusiveCallback<T extends ConfToken
 
     protected ExtendedPositionAwareSplittableCallback<T, I> exclusiveCallbackRef;
 
-    public ExtendedPositionAwareExclusiveCallback(TokenizerCallbacks<T> delegate) {
+    public ExtendedPositionAwareExclusiveCallbackAggregate(TokenizerCallbacks<T> delegate) {
         this.delegate = delegate;
         this.lastDecorated = delegate;
     }
@@ -67,17 +64,25 @@ public abstract class ExtendedPositionAwareExclusiveCallback<T extends ConfToken
         this.earlyReturn = earlyReturn;
         callbacks.forEach(call -> call.setEarlyReturn(earlyReturn));
     }
+    
+    protected Stream<ExtendedPositionAwareSplittableCallback<T, I>> getCallbackStream(){
+        return callbacks.stream().filter(f-> f!= null);
+    }
 
     public abstract I getPosition();
 
-    public abstract T construct(I start, I end, char[] buffer, int offset, int length) throws Exception;
-
-    public ExtendedPositionAwareExclusiveCallback<T, I> ignoring(boolean ignoring) {
+    public ExtendedPositionAwareExclusiveCallbackAggregate<T, I> ignoring(boolean ignoring) {
         setIgnore(ignoring);
         return this;
     }
 
-    public ExtendedPositionAwareExclusiveCallback<T, I> enableExclusion(boolean exclusion) {
+    /**
+     * This is required when you don't want to be matching "string" inside a comment or vice versa.
+     * this is not mandatory only when there can be one external state.
+     * @param exclusion
+     * @return 
+     */
+    public ExtendedPositionAwareExclusiveCallbackAggregate<T, I> enableExclusion(boolean exclusion) {
         setExclusive(exclusion);
         return this;
     }
@@ -120,10 +125,10 @@ public abstract class ExtendedPositionAwareExclusiveCallback<T extends ConfToken
 
     public static class ExclusivityAware<T extends ConfToken, I> implements ExtendedPositionAwareSplittableCallback<T, I> {
 
-        protected ExtendedPositionAwareExclusiveCallback<T, I> main;
+        protected ExtendedPositionAwareExclusiveCallbackAggregate<T, I> main;
         protected ExtendedPositionAwareSplittableCallback<T, I> delegate;
 
-        public ExclusivityAware(ExtendedPositionAwareExclusiveCallback<T, I> main, ExtendedPositionAwareSplittableCallback<T, I> delegate) {
+        public ExclusivityAware(ExtendedPositionAwareExclusiveCallbackAggregate<T, I> main, ExtendedPositionAwareSplittableCallback<T, I> delegate) {
             this.main = main;
             this.delegate = delegate;
         }
@@ -163,7 +168,7 @@ public abstract class ExtendedPositionAwareExclusiveCallback<T extends ConfToken
 
         @Override
         public T construct(I start, I end, char[] buffer, int offset, int length) throws Exception {
-            return main.construct(start, end, buffer, offset, length);
+            return delegate.construct(start, end, buffer, offset, length);
         }
 
         @Override
@@ -204,11 +209,11 @@ public abstract class ExtendedPositionAwareExclusiveCallback<T extends ConfToken
             return delegate;
         }
 
-        public ExtendedPositionAwareExclusiveCallback<T, I> getMain() {
+        public ExtendedPositionAwareExclusiveCallbackAggregate<T, I> getMain() {
             return main;
         }
 
-        public void setMain(ExtendedPositionAwareExclusiveCallback<T, I> main) {
+        public void setMain(ExtendedPositionAwareExclusiveCallbackAggregate<T, I> main) {
             this.main = main;
         }
 

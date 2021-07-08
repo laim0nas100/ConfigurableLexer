@@ -82,7 +82,7 @@ public class MAIN {
         List list = new ArrayList<>();
         ConfTokenizer myTokenizer = simplePosTokenizer;
         myTokenizer.reset(term);
-        myTokenizer.produceTokens(t->{
+        myTokenizer.produceItems(t->{
             list.add(t);
             DLog.print(t);
         });
