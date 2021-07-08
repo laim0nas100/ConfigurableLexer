@@ -3,10 +3,11 @@ package lt.lb.configurablelexer.token;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Objects;
-import lt.lb.commons.DLog;
 import lt.lb.configurablelexer.token.CharInfo.CharInfoDefault;
 import lt.lb.configurablelexer.utils.CharacterBuffer;
 import lt.lb.configurablelexer.utils.CharacterUtils;
+import lt.lb.configurablelexer.utils.OverheadAware;
+import lt.lb.configurablelexer.utils.OverheadReader;
 
 /**
  *
@@ -19,20 +20,28 @@ public abstract class BaseTokenizer<T extends ConfToken> extends BufferedConfTok
     protected int offset, bufferIndex, ioBufferLen, tokenLen;
     protected char[] buffer;
     CharacterBuffer ioBuffer;
-    protected int maxTokenLen = 255;
+    protected int maxTokenLen = 256;
+    protected OverheadAware overheadAware = ()-> false;
+    protected int readerBufferSize = 256;
 
     public BaseTokenizer() {
     }
 
     @Override
     public void reset(Reader input) {
+        if(input instanceof OverheadAware){
+            overheadAware = (OverheadAware) input;
+        }else{
+            input = new OverheadReader(input, readerBufferSize);
+            overheadAware = (OverheadAware) input;
+        }
         this.input = Objects.requireNonNull(input);
         buffer = new char[CharacterUtils.oversize(2, Character.BYTES)];
         offset = 0;
         bufferIndex = 0;
         ioBufferLen = 0;
         tokenLen = 0;
-        ioBuffer = CharacterUtils.newCharacterBuffer(256);
+        ioBuffer = CharacterUtils.newCharacterBuffer(readerBufferSize);
         currentTokenIndex = 0;
         bufferedTokens = ConfTokenBuffer.empty();
         getCallbacks().reset();
@@ -43,7 +52,6 @@ public abstract class BaseTokenizer<T extends ConfToken> extends BufferedConfTok
         int length = 0;
         while (true) {
             if (bufferIndex >= ioBufferLen) {
-                //TODO, figure out the last char in reader
                 offset += ioBufferLen;
                 CharacterUtils.fill(ioBuffer, input); // read supplementary char aware with CharacterUtils
                 if (ioBuffer.getLength() == 0) {
@@ -64,9 +72,8 @@ public abstract class BaseTokenizer<T extends ConfToken> extends BufferedConfTok
 
             boolean isTokenChar = isTokenChar(c);
             boolean isBreakChar = isBreakChar(c);
-//            String str = Character.toString(c);
-//            DLog.print(str);
-            charListener(CharInfoDefault.of(isTokenChar, isBreakChar, false), c);
+            boolean isLastChar  = !overheadAware.hasOverhead() && bufferIndex == ioBuffer.getLength();
+            charListener(CharInfoDefault.of(isTokenChar, isBreakChar, isLastChar), c);
             if (isTokenChar) {               // if it's a token char
                 if (length >= buffer.length - 1) { // check if a supplementary could run out of bounds
                     buffer = CharacterUtils.resizeBuffer(buffer, 2 + length);// make sure a supplementary fits in the buffer
@@ -76,14 +83,13 @@ public abstract class BaseTokenizer<T extends ConfToken> extends BufferedConfTok
                     break;
                 }
             } 
-            if (isBreakChar || (!isTokenChar && length > 0)) {           // at non-Letter with chars or a break character
-                break;                           // return 'em
+            if (isBreakChar || (!isTokenChar && length > 0)) { // at non-token with chars or a break character
+                break;                      
             }
         }
         currentTokenIndex = 0;
         this.bufferedTokens = constructTokens(buffer, 0, length);
 
-//        DLog.print(String.valueOf(buffer, offset, length), length, bufferedTokens);
         return true;
     }
 
