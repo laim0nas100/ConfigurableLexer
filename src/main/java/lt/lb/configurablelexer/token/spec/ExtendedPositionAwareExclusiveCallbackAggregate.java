@@ -19,14 +19,14 @@ import lt.lb.configurablelexer.token.TokenizerCallbacks;
 public abstract class ExtendedPositionAwareExclusiveCallbackAggregate<T extends ConfToken, I> implements DelegatingTokenizerCallbacks<T> {
 
     protected TokenizerCallbacks<T> delegate;
-    protected List<ExtendedPositionAwareSplittableCallback<T, I>> callbacks = new ArrayList<>();
+    protected List<ExclusivityAware<T, I>> callbacks = new ArrayList<>();
     protected TokenizerCallbacks<T> lastDecorated;
     protected boolean ignore;
     protected boolean earlyReturn;
     protected boolean exclusive;
 
     protected ExtendedPositionAwareSplittableCallback<T, I> exclusiveCallbackRef;
-
+    
     public ExtendedPositionAwareExclusiveCallbackAggregate(TokenizerCallbacks<T> delegate) {
         this.delegate = delegate;
         this.lastDecorated = delegate;
@@ -38,7 +38,7 @@ public abstract class ExtendedPositionAwareExclusiveCallbackAggregate<T extends 
 
     public void setIgnore(final boolean ignore) {
         this.ignore = ignore;
-        callbacks.forEach(call -> call.setIgnore(ignore));
+        getCallbackStream().forEach(call -> call.setIgnore(ignore));
     }
 
     public boolean isExclusive() {
@@ -62,12 +62,19 @@ public abstract class ExtendedPositionAwareExclusiveCallbackAggregate<T extends 
 
     public void setEarlyReturn(boolean earlyReturn) {
         this.earlyReturn = earlyReturn;
-        callbacks.forEach(call -> call.setEarlyReturn(earlyReturn));
+        getCallbackStream().forEach(call -> call.setEarlyReturn(earlyReturn));
     }
-    
-    protected Stream<ExtendedPositionAwareSplittableCallback<T, I>> getCallbackStream(){
-        return callbacks.stream().filter(f-> f!= null);
+
+    protected Stream<ExtendedPositionAwareSplittableCallback<T, I>> getCallbackStream() {
+        return callbacks.stream().filter(f -> f != null).map(m -> m.getDelegate());
     }
+
+    @Override
+    public ConfTokenBuffer<T> constructTokens(char[] buffer, int offset, int length) throws Exception {
+        return delegate().constructTokens(buffer, offset, length);
+    }
+
+    public abstract T construct(ExtendedPositionAwareSplittableCallback cb, I start, I end, char[] buffer, int offset, int length) throws Exception;
 
     public abstract I getPosition();
 
@@ -77,10 +84,12 @@ public abstract class ExtendedPositionAwareExclusiveCallbackAggregate<T extends 
     }
 
     /**
-     * This is required when you don't want to be matching "string" inside a comment or vice versa.
-     * this is not mandatory only when there can be one external state.
+     * This is required when you don't want to be matching "string" inside a
+     * comment or vice versa. this is not mandatory only when there can be one
+     * external state.
+     *
      * @param exclusion
-     * @return 
+     * @return
      */
     public ExtendedPositionAwareExclusiveCallbackAggregate<T, I> enableExclusion(boolean exclusion) {
         setExclusive(exclusion);
@@ -88,17 +97,11 @@ public abstract class ExtendedPositionAwareExclusiveCallbackAggregate<T extends 
     }
 
     protected void resetAllInternalState() {
-        for (ExtendedPositionAwareSplittableCallback<T, I> call : callbacks) {
-            call.resetInternalState();
-        }
+        getCallbackStream().forEach(call -> call.resetInternalState());
     }
 
     protected void resetAllInternalStateExceptExclusive() {
-        for (ExtendedPositionAwareSplittableCallback<T, I> call : callbacks) {
-            if (call != exclusiveCallbackRef) {
-                call.resetInternalState();
-            }
-        }
+        getCallbackStream().filter(call -> call != exclusiveCallbackRef).forEach(call -> call.resetInternalState());
     }
 
     @Override
@@ -112,7 +115,7 @@ public abstract class ExtendedPositionAwareExclusiveCallbackAggregate<T extends 
         exclusivityAware.setDelegate(apply);
 
         decorate(apply);
-        lastDecorated = exclusivityAware;
+        lastDecorated = apply;
         callbacks.add(exclusivityAware);
 
         return apply;
@@ -123,7 +126,7 @@ public abstract class ExtendedPositionAwareExclusiveCallbackAggregate<T extends 
         cb.setIgnore(ignore);
     }
 
-    public static class ExclusivityAware<T extends ConfToken, I> implements ExtendedPositionAwareSplittableCallback<T, I> {
+    public static class ExclusivityAware<T extends ConfToken, I> implements DelegatingTokenizerCallbacks<T> {
 
         protected ExtendedPositionAwareExclusiveCallbackAggregate<T, I> main;
         protected ExtendedPositionAwareSplittableCallback<T, I> delegate;
@@ -133,32 +136,35 @@ public abstract class ExtendedPositionAwareExclusiveCallbackAggregate<T extends 
             this.delegate = delegate;
         }
 
-        @Override
-        public boolean isDisabled() {
+        public boolean isUsed() {
             if (main.isExclusive()) {
                 ExtendedPositionAwareSplittableCallback<T, I> ref = main.exclusiveCallbackRef;
-                boolean isMe = ref == this;
-                return (main.exclusiveCallbackRef != null && !isMe);
+                return (ref == null || ref == getDelegate());
             }
-            return delegate().isDisabled();
+            return true;
+        }
 
+        public boolean isCurrentlyExcluded() {
+            return !isUsed();
         }
 
         @Override
+        public boolean isDisabled() {
+            return isCurrentlyExcluded();
+        }
+
         public I start() {
             if (main.isExclusive()) {
-                main.exclusiveCallbackRef = this;
+                main.exclusiveCallbackRef = getDelegate();
                 main.resetAllInternalStateExceptExclusive();
             }
             return main.getPosition();
         }
 
-        @Override
         public I mid() {
             return main.getPosition();
         }
 
-        @Override
         public I end() {
             if (main.isExclusive()) {
                 main.exclusiveCallbackRef = null;
@@ -166,39 +172,8 @@ public abstract class ExtendedPositionAwareExclusiveCallbackAggregate<T extends 
             return main.getPosition();
         }
 
-        @Override
         public T construct(I start, I end, char[] buffer, int offset, int length) throws Exception {
-            return delegate.construct(start, end, buffer, offset, length);
-        }
-
-        @Override
-        public void resetInternalState() {
-            delegate.resetInternalState();
-        }
-
-        @Override
-        public boolean isWithin() {
-            return delegate.isWithin();
-        }
-
-        @Override
-        public boolean isIgnore() {
-            return delegate.isIgnore();
-        }
-
-        @Override
-        public boolean isEarlyReturn() {
-            return delegate.isEarlyReturn();
-        }
-
-        @Override
-        public TokenizerCallbacks<T> delegate() {
-            return delegate;
-        }
-
-        @Override
-        public ConfTokenBuffer<T> constructTokens(char[] buffer, int offset, int length) throws Exception {
-            return delegate.constructTokens(buffer, offset, length);
+            return main.construct(getDelegate(), start, end, buffer, offset, length);
         }
 
         public void setDelegate(ExtendedPositionAwareSplittableCallback<T, I> delegate) {
@@ -218,15 +193,9 @@ public abstract class ExtendedPositionAwareExclusiveCallbackAggregate<T extends 
         }
 
         @Override
-        public void setIgnore(boolean bool) {
-            delegate.setIgnore(bool);
+        public TokenizerCallbacks<T> delegate() {
+            return getDelegate();
         }
-
-        @Override
-        public void setEarlyReturn(boolean bool) {
-            delegate.setEarlyReturn(bool);
-        }
-
     }
 
 }

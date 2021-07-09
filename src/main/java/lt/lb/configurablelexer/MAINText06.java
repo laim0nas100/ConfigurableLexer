@@ -22,7 +22,10 @@ import lt.lb.configurablelexer.token.base.LiteralToken;
 import lt.lb.configurablelexer.token.base.NumberToken;
 import lt.lb.configurablelexer.token.base.StringToken;
 import lt.lb.configurablelexer.token.simple.Pos;
+import lt.lb.configurablelexer.token.spec.ExtendedPositionAwareSplittableCallback;
+import lt.lb.configurablelexer.token.spec.comment.CommentAwareCallback;
 import lt.lb.configurablelexer.token.spec.comment.PosAwareDefaultCallback;
+import lt.lb.configurablelexer.token.spec.string.StringAwareCallback;
 import lt.lb.configurablelexer.utils.BufferedIterator.SimplifiedBufferedIterator;
 
 /**
@@ -38,7 +41,7 @@ public class MAINText06 {
         main.surroundString = true;
         main.threadName = false;
         DLog.useTimeFormat(main, "HH:mm:ss.SSS ");
-        Reader input = new FileReader(new File("parse_text_1.txt"), StandardCharsets.UTF_8);
+        Reader input = new FileReader(new File("parse_text.txt"), StandardCharsets.UTF_8);
 
         DefaultConfTokenizer<ConfToken> tokenizer = new DefaultConfTokenizer();
 
@@ -82,16 +85,18 @@ public class MAINText06 {
 
         tokenizer.getCallbacks().nest(t -> lexer);
         tokenizer.getCallbacks().nest(t -> {
-             return new PosAwareDefaultCallback<ConfToken, Pos>(t, lineListener::getPos) {
+            return new PosAwareDefaultCallback<ConfToken, Pos>(t, lineListener::getPos) {
                 @Override
-                public ConfToken contructComment(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
-                    return new CommentToken(String.valueOf(buffer, offset, length), start);
+                public ConfToken construct(ExtendedPositionAwareSplittableCallback cb, Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
+                    if (cb instanceof CommentAwareCallback) {
+                        return new CommentToken(String.valueOf(buffer, offset, length), start);
+                    }
+                    if (cb instanceof StringAwareCallback) {
+                        return new StringToken(String.valueOf(buffer, offset, length), start);
+                    }
+                    throw new IllegalStateException("Unrecognized callback " + cb);
                 }
-                @Override
-                public ConfToken contructString(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
-                    return new StringToken(String.valueOf(buffer, offset, length), start);
-                }
-                
+
             }
                     .enableLineComment('#', '$')
                     .enableLineComment("//")
@@ -116,7 +121,7 @@ public class MAINText06 {
         ConfTokenizer myTokenizer = tokenizer;
         myTokenizer.reset(input);
         SimplifiedBufferedIterator<ConfToken> iterator = myTokenizer.toSimplifiedIterator();
-        
+
 //        for(ConfToken t:iterator){
 //            DLog.print(t);
 //        }

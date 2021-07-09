@@ -12,82 +12,48 @@ import lt.lb.configurablelexer.lexer.matchers.StringMatcher;
 import lt.lb.configurablelexer.lexer.matchers.KeywordMatcher;
 import lt.lb.configurablelexer.token.base.KeywordToken;
 import lt.lb.configurablelexer.token.base.BaseStringToken;
-import lt.lb.configurablelexer.token.BaseTokenizer;
 import lt.lb.configurablelexer.token.ConfCharPredicate;
 import lt.lb.configurablelexer.token.ConfToken;
 import lt.lb.configurablelexer.token.ConfTokenizer;
-import lt.lb.configurablelexer.token.ConfTokenizerCallbacks;
+import lt.lb.configurablelexer.token.DefaultConfTokenizer;
 import lt.lb.configurablelexer.token.spec.LineAwareCharListener;
-import lt.lb.configurablelexer.token.TokenizerCallbacks;
 import lt.lb.configurablelexer.token.base.CommentToken;
 import lt.lb.configurablelexer.token.base.LiteralToken;
 import lt.lb.configurablelexer.token.base.NumberToken;
 import lt.lb.configurablelexer.token.base.StringToken;
 import lt.lb.configurablelexer.token.simple.Pos;
 import lt.lb.configurablelexer.token.spec.ExtendedPositionAwareSplittableCallback;
-import lt.lb.configurablelexer.token.spec.PositionAwareDefaultCallback;
-import lt.lb.configurablelexer.token.spec.string.StringAwareCallback;
 import lt.lb.configurablelexer.token.spec.comment.CommentAwareCallback;
+import lt.lb.configurablelexer.token.spec.comment.PosAwareDefaultCallback;
+import lt.lb.configurablelexer.token.spec.string.StringAwareCallback;
+import lt.lb.configurablelexer.utils.BufferedIterator.SimplifiedBufferedIterator;
 
 /**
  *
  * @author laim0nas100
  */
-public class MAINText05 {
+public class MAINText08 {
 
     public static void main(String[] args) throws Exception {
         DLog main = DLog.main();
-        main.async = false;
+        main.async = true;
         main.stackTrace = false;
-        main.surroundString = false;
+        main.surroundString = true;
         main.threadName = false;
         DLog.useTimeFormat(main, "HH:mm:ss.SSS ");
-        Reader input = new FileReader(new File("parse_text.txt"), StandardCharsets.UTF_8);
+        Reader input = new FileReader(new File("parse_text_nested_comments.txt"), StandardCharsets.UTF_8);
 
-        ConfTokenizerCallbacks callbacks = new ConfTokenizerCallbacks<>().setTokenCharPredicate(
-                new ConfCharPredicate().disallowWhen(Character::isWhitespace)
-        );
+        DefaultConfTokenizer<ConfToken> tokenizer = new DefaultConfTokenizer();
 
         LineAwareCharListener lineListener = new LineAwareCharListener();
 
-        callbacks.addListener(lineListener);
+        tokenizer.getCallbacks()
+                .setTokenCharPredicate(
+                        new ConfCharPredicate().disallowWhen(Character::isWhitespace)
+                )
+                .addListener(lineListener);
 
-        PositionAwareDefaultCallback<ConfToken, Pos> commentCallback = new PositionAwareDefaultCallback<ConfToken, Pos>(callbacks) {
-
-            @Override
-            public Pos getPosition() {
-                return lineListener.getPos();
-            }
-
-            @Override
-            public ConfToken construct(ExtendedPositionAwareSplittableCallback cb, Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
-                if(cb instanceof CommentAwareCallback){
-                    return new CommentToken(String.valueOf(buffer, offset, length), start);
-                }
-                if(cb instanceof StringAwareCallback){
-                    return new StringToken(String.valueOf(buffer, offset, length), start);
-                }
-                throw new IllegalStateException("Unrecognized callback "+cb);
-            }
-            
-            
-
-        }
-                .enableLineComment('#', '$')
-                .enableLineComment("//")
-                .enableMultilineComment("/*", "*/");
-
-        callbacks.nest(t -> commentCallback);
-
-        BaseTokenizer tokenizer_with_comments = new BaseTokenizer() {
-
-            @Override
-            protected TokenizerCallbacks getCallbacks() {
-                return callbacks;
-            }
-        };
-
-        SimpleLexer lexer = new SimpleLexer(tokenizer_with_comments) {
+        SimpleLexer lexer = new SimpleLexer(tokenizer) {
             @Override
             public BaseStringToken<Pos> makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String str) throws Exception {
                 Pos pos = lineListener.getPos(from, str.length());
@@ -117,7 +83,55 @@ public class MAINText05 {
             }
         };
 
-        callbacks.setConstructor(lexer);
+        tokenizer.getCallbacks().nest(t -> lexer);
+        tokenizer.getCallbacks().nest(t -> {
+            return new PosAwareDefaultCallback<ConfToken, Pos>(t, lineListener::getPos) {
+                @Override
+                public ConfToken construct(ExtendedPositionAwareSplittableCallback cb, Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
+                    if (cb instanceof CommentAwareCallback) {
+                        return new CommentToken(String.valueOf(buffer, offset, length), start);
+                    }
+                    if (cb instanceof StringAwareCallback) {
+                        return new StringToken(String.valueOf(buffer, offset, length), start);
+                    }
+                    throw new IllegalStateException("Unrecognized callback " + cb);
+                }
+
+            }
+                    .enableLineComment('#', '$')
+                    .enableLineComment("//")
+                    .enableMultilineComment("/*", "*/")
+                    .enableStrings()
+                    .enableExclusion(true)
+                    .ignoringOnlyComments(false);
+        });
+//        tokenizer.getCallbacks().nest(t->{
+//            return new StringAwareCallback<ConfToken, Pos>(t) {
+//                @Override
+//                public ConfToken construct(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
+//                    return new StringToken<>(String.valueOf(buffer, offset, length),start);
+//                }
+//
+//                @Override
+//                public Pos start() {
+//                    return lineListener.getPos();
+//                }
+//
+//                @Override
+//                public Pos end() {
+//                    return lineListener.getPos();
+//                }
+//
+//                @Override
+//                public Pos mid() {
+//                    return lineListener.getPos();
+//                }
+//            };
+//        });
+
+        tokenizer.getCallbacks().addListener((info, c) -> {
+//            DLog.print(info,Character.toString(c));
+        });
 
         lexer.addMatcher(new KeywordMatcher("labas"));
         lexer.addMatcher(new IntegerMatcher());
@@ -125,9 +139,19 @@ public class MAINText05 {
         lexer.addMatcher(new KeywordMatcher("+", true));
         lexer.addMatcher(new KeywordMatcher("++", true));
         lexer.addMatcher(new KeywordMatcher(";", true));
+        lexer.addMatcher(new KeywordMatcher("int", false));
+        lexer.addMatcher(new KeywordMatcher("float", false));
 
-        ConfTokenizer myTokenizer = lexer;
+        ConfTokenizer myTokenizer = tokenizer;
         myTokenizer.reset(input);
+        SimplifiedBufferedIterator<ConfToken> iterator = myTokenizer.toSimplifiedIterator();
+
+//        for(ConfToken t:iterator){
+//            DLog.print(t);
+//        }
+//        while(iterator.hasNext()){
+//            DLog.print(iterator.next());
+//        }
         myTokenizer.produceItems(t -> {
             DLog.print(t);
         });

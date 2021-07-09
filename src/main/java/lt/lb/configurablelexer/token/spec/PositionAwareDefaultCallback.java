@@ -50,11 +50,6 @@ public abstract class PositionAwareDefaultCallback<T extends ConfToken, I> exten
         return isExclusive();
     }
 
-
-    public abstract T contructComment(I start, I end, char[] buffer, int offset, int length) throws Exception;
-    
-    public abstract T contructString(I start, I end, char[] buffer, int offset, int length) throws Exception;
-
     public PositionAwareDefaultCallback<T, I> ignoringOnlyComments(boolean ignoreComments) {
         setIgnoreComments(ignoreComments);
         return this;
@@ -67,26 +62,23 @@ public abstract class PositionAwareDefaultCallback<T extends ConfToken, I> exten
     }
 
     public PositionAwareDefaultCallback<T, I> enableMultilineComment(String commentStartEnd) {
-        return enableMultilineComment(commentStartEnd, commentStartEnd, false);
+        return enableMultilineComment(commentStartEnd, commentStartEnd, false,false);
     }
 
     public PositionAwareDefaultCallback<T, I> enableMultilineComment(String commentStart, String commentEnd) {
-        return enableMultilineComment(commentStart, commentEnd, false);
+        return enableMultilineComment(commentStart, commentEnd, false, false);
     }
 
-    public PositionAwareDefaultCallback<T, I> enableMultilineComment(String commentStart, String commentEnd, boolean ignoreCase) {
+    public PositionAwareDefaultCallback<T, I> enableMultilineComment(String commentStart, String commentEnd, boolean ignoreCase, boolean canBeNested) {
         if (mcac == null) {
             PositionAwareDefaultCallback<T, I> me = this;
             mcac = this.addNested((e, f) -> {
                 return new MultilineCommentAwareCallback<T, I>(f) {
 
-                    Redirecter.RedirecterSupplier<Boolean> redir;
+                    final Redirecter.RedirecterSupplier<Boolean> redir = Redirecter.of(() -> e.isDisabled(), () -> super.isDisabled());
 
                     @Override
                     public boolean isDisabled() {
-                        if (redir == null) {
-                            redir = Redirecter.of(() -> e.isDisabled(), () -> super.isDisabled());
-                        }
                         return redir.get();
                     }
 
@@ -107,7 +99,7 @@ public abstract class PositionAwareDefaultCallback<T extends ConfToken, I> exten
 
                     @Override
                     public T construct(I start, I end, char[] buffer, int offset, int length) throws Exception {
-                        return contructComment(start, end, buffer, offset, length);
+                        return e.construct(start, end, buffer, offset, length);
                     }
                 };
             });
@@ -115,132 +107,34 @@ public abstract class PositionAwareDefaultCallback<T extends ConfToken, I> exten
         mcac.setIgnoreCase(ignoreCase);
         mcac.setCommentStart(commentStart);
         mcac.setCommentEnd(commentEnd);
+        mcac.setCanBeNested(canBeNested);
         mcac.setIgnore(ignore || ignoreComments);
 
         return this;
     }
-    
-    public PositionAwareDefaultCallback<T, I> enableStrings(){
+
+    public PositionAwareDefaultCallback<T, I> enableStrings() {
         return enableStrings('"', '\\');
     }
-    
-    public PositionAwareDefaultCallback<T, I> enableStrings(int endings, int escape){
+
+    public PositionAwareDefaultCallback<T, I> enableStrings(int endings, int escape) {
         IntPredicate ofChars = ConfCharPredicate.ofChars(endings);
         return enableStrings(ofChars, ofChars, ConfCharPredicate.ofChars(escape));
     }
-    
-    public PositionAwareDefaultCallback<T, I> enableStrings(int start, int end, int escape){
+
+    public PositionAwareDefaultCallback<T, I> enableStrings(int start, int end, int escape) {
         return enableStrings(ConfCharPredicate.ofChars(start), ConfCharPredicate.ofChars(end), ConfCharPredicate.ofChars(escape));
     }
-    
-     public PositionAwareDefaultCallback<T, I> enableStrings(IntPredicate start, IntPredicate end, IntPredicate escape) {
+
+    public PositionAwareDefaultCallback<T, I> enableStrings(IntPredicate start, IntPredicate end, IntPredicate escape) {
         if (strings == null) {
             strings = this.addNested((e, f) -> {
                 return new StringAwareCallback<T, I>(f) {
 
-                    Redirecter.RedirecterSupplier<Boolean> redir;
+                    final Redirecter.RedirecterDisableAware redir = new Redirecter.RedirecterDisableAware(e, () -> super.isDisabled());
 
                     @Override
                     public boolean isDisabled() {
-                        if (redir == null) {
-                            redir = Redirecter.of(() -> e.isDisabled(), () -> super.isDisabled());
-                        }
-                        return redir.get();
-                    }
-
-                    @Override
-                    public I start() {
-                        return e.start();
-                    }
-
-                    @Override
-                    public I mid() {
-                        return e.mid();
-                    }
-
-                    @Override
-                    public I end() {
-                        return e.end();
-                    }
-
-                    @Override
-                    public T construct(I start, I end, char[] buffer, int offset, int length) throws Exception {
-                        return contructString(start, end, buffer, offset, length);
-                    }
-                };
-            });
-        }
-        strings.setStringEnd(end);
-        strings.setStringStart(start);
-        strings.setStringEscape(escape);
-        strings.setIgnore(ignore || ignoreComments);
-
-        return this;
-    }
-
-    public PositionAwareDefaultCallback<T, I> enableLineComment(String commentStart) {
-        return enableLineComment(commentStart, false);
-    }
-
-    public PositionAwareDefaultCallback<T, I> enableLineComment(String commentStart, boolean ignoreCase) {
-        if (lcacs == null) {
-            lcacs = this.addNested((e, f) -> {
-                return new LineCommentAwareCallbackString<T, I>(f) {
-                    Redirecter.RedirecterSupplier<Boolean> redir;
-
-                    @Override
-                    public boolean isDisabled() {
-                        if (redir == null) {
-                            redir = Redirecter.of(() -> e.isDisabled(), () -> super.isDisabled());
-                        }
-                        return redir.get();
-                    }
-
-                    @Override
-                    public I start() {
-                        return e.start();
-                    }
-
-                    @Override
-                    public I mid() {
-                        return e.mid();
-                    }
-
-                    @Override
-                    public I end() {
-                        return e.end();
-                    }
-
-                    @Override
-                    public T construct(I start, I end, char[] buffer, int offset, int length) throws Exception {
-                        return contructComment(start, end, buffer, offset, length);
-                    }
-                };
-            });
-        }
-        lcacs.setCommentStart(commentStart);
-        lcacs.setIgnoreCase(ignoreCase);
-        lcacs.setIgnore(ignore || ignoreComments);
-        return this;
-    }
-
-    public PositionAwareDefaultCallback<T, I> enableLineComment(int... possibleCommentChars) {
-        return enableLineComment(ConfCharPredicate.ofChars(possibleCommentChars));
-    }
-
-    public PositionAwareDefaultCallback<T, I> enableLineComment(IntPredicate charPredicate) {
-        PositionAwareDefaultCallback<T, I> me = this;
-        if (lcac == null) {
-            lcac = this.addNested((e, f) -> {
-                return new LineCommentAwareCallback<T, I>(f) {
-
-                    Redirecter.RedirecterDisableAware redir;
-
-                    @Override
-                    public boolean isDisabled() {
-                        if (redir == null) {
-                            redir = new Redirecter.RedirecterDisableAware(e, () -> super.isDisabled());
-                        }
                         return redir.isDisabled();
                     }
 
@@ -261,7 +155,97 @@ public abstract class PositionAwareDefaultCallback<T extends ConfToken, I> exten
 
                     @Override
                     public T construct(I start, I end, char[] buffer, int offset, int length) throws Exception {
-                        return contructComment(start, end, buffer, offset, length);
+                        return e.construct(start, end, buffer, offset, length);
+                    }
+                };
+            });
+        }
+        strings.setEndPred(end);
+        strings.setStartPred(start);
+        strings.setEscapePred(escape);
+        strings.setIgnore(ignore || ignoreComments);
+
+        return this;
+    }
+
+    public PositionAwareDefaultCallback<T, I> enableLineComment(String commentStart) {
+        return enableLineComment(commentStart, false);
+    }
+
+    public PositionAwareDefaultCallback<T, I> enableLineComment(String commentStart, boolean ignoreCase) {
+        if (lcacs == null) {
+            lcacs = this.addNested((e, f) -> {
+                return new LineCommentAwareCallbackString<T, I>(f) {
+                    final Redirecter.RedirecterDisableAware redir = new Redirecter.RedirecterDisableAware(e, () -> super.isDisabled());
+
+                    @Override
+                    public boolean isDisabled() {
+                        return redir.isDisabled();
+                    }
+
+                    @Override
+                    public I start() {
+                        return e.start();
+                    }
+
+                    @Override
+                    public I mid() {
+                        return e.mid();
+                    }
+
+                    @Override
+                    public I end() {
+                        return e.end();
+                    }
+
+                    @Override
+                    public T construct(I start, I end, char[] buffer, int offset, int length) throws Exception {
+                        return e.construct(start, end, buffer, offset, length);
+                    }
+                };
+            });
+        }
+        lcacs.setCommentStart(commentStart);
+        lcacs.setIgnoreCase(ignoreCase);
+        lcacs.setIgnore(ignore || ignoreComments);
+        return this;
+    }
+
+    public PositionAwareDefaultCallback<T, I> enableLineComment(int... possibleCommentChars) {
+        return enableLineComment(ConfCharPredicate.ofChars(possibleCommentChars));
+    }
+
+    public PositionAwareDefaultCallback<T, I> enableLineComment(IntPredicate charPredicate) {
+        PositionAwareDefaultCallback<T, I> me = this;
+        if (lcac == null) {
+            lcac = this.addNested((e, f) -> {
+                return new LineCommentAwareCallback<T, I>(f) {
+
+                    final Redirecter.RedirecterDisableAware redir = new Redirecter.RedirecterDisableAware(e, () -> super.isDisabled());
+
+                    @Override
+                    public boolean isDisabled() {
+                        return redir.isDisabled();
+                    }
+
+                    @Override
+                    public I start() {
+                        return e.start();
+                    }
+
+                    @Override
+                    public I mid() {
+                        return e.mid();
+                    }
+
+                    @Override
+                    public I end() {
+                        return e.end();
+                    }
+
+                    @Override
+                    public T construct(I start, I end, char[] buffer, int offset, int length) throws Exception {
+                        return e.construct(start, end, buffer, offset, length);
                     }
                 };
             });
