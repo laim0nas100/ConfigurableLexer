@@ -8,7 +8,7 @@ import lt.lb.configurablelexer.token.ConfToken;
  *
  * @author laim0nas100
  */
-public class DelegatedTokenMatcher implements TokenMatcher {
+public class DelegatedTokenMatcher<T extends ConfToken> implements TokenMatcher<T> {
 
     protected TokenMatcher delegate;
 
@@ -33,6 +33,11 @@ public class DelegatedTokenMatcher implements TokenMatcher {
     @Override
     public int importance() {
         return delegate.importance();
+    }
+
+    @Override
+    public boolean isRepeading() {
+        return delegate.isRepeading();
     }
 
     @Override

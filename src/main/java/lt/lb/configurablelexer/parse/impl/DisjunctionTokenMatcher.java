@@ -7,14 +7,14 @@ import lt.lb.configurablelexer.token.ConfToken;
  *
  * @author laim0nas100
  */
-public class DisjunctionTokenMatcher extends CompositeTokenMatcher {
+public class DisjunctionTokenMatcher<T extends ConfToken> extends CompositeTokenMatcher<T> {
 
     protected Class<? extends ConfToken>[] minTypes;
 
     public DisjunctionTokenMatcher(String name, TokenMatcher... matchers) {
         super(assertSameLength(matchers), name, matchers);
         minTypes = new Class[length];
-        
+
         if (length > 0) {
             for (int pos = 0; pos < length; pos++) {
                 Class<? extends ConfToken> requiredType = matchers[0].requiredType(pos);
@@ -54,6 +54,16 @@ public class DisjunctionTokenMatcher extends CompositeTokenMatcher {
     public boolean matches(int position, ConfToken token) {
         for (TokenMatcher matcher : matchers) {
             if (matcher.matches(position, token)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isRepeading() {
+        for (TokenMatcher matcher : matchers) {
+            if (matcher.isRepeading()) {
                 return true;
             }
         }

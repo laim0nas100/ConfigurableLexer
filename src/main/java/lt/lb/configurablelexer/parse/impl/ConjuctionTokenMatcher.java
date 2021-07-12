@@ -7,7 +7,7 @@ import lt.lb.configurablelexer.token.ConfToken;
  *
  * @author laim0nas100
  */
-public class ConjuctionTokenMatcher extends CompositeTokenMatcher {
+public class ConjuctionTokenMatcher<T extends ConfToken> extends CompositeTokenMatcher<T> {
 
     protected Class<? extends ConfToken>[] maxTypes;
 
@@ -21,10 +21,10 @@ public class ConjuctionTokenMatcher extends CompositeTokenMatcher {
 
                 for (int i = 1; i < matchers.length; i++) {
                     Class<? extends ConfToken> candidate = matchers[i].requiredType(pos);
-                    if(typeComparator.compare(maxTypes[pos], candidate) > 0){
+                    if (typeComparator.compare(maxTypes[pos], candidate) > 0) {
                         maxTypes[pos] = candidate;
                     }
-                    
+
                 }
             }
 
@@ -41,6 +41,16 @@ public class ConjuctionTokenMatcher extends CompositeTokenMatcher {
     public boolean matches(int position, ConfToken token) {
         for (TokenMatcher matcher : matchers) {
             if (!matcher.matches(position, token)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean isRepeading() {
+        for (TokenMatcher matcher : matchers) {
+            if (!matcher.isRepeading()) {
                 return false;
             }
         }
