@@ -6,20 +6,19 @@ import lt.lb.configurablelexer.token.ConfToken;
  *
  * @author laim0nas100
  */
-public class NoneTokenMatcher extends BaseTokenMatcher {
+public class NoneTokenMatcher<T extends ConfToken> extends BaseTokenMatcher<T> {
 
     /**
      * Should never match with this class
      */
     public static final class ConfTokenNone implements ConfToken {
 
-        private ConfTokenNone() {
+        protected ConfTokenNone() {
         }
 
-        
         @Override
         public String getValue() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            throw new UnsupportedOperationException("Not supported.");
         }
 
     }

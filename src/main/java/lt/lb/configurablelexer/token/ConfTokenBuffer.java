@@ -40,7 +40,7 @@ public interface ConfTokenBuffer<T extends ConfToken> {
     }
 
     public static <T extends ConfToken> ConfTokenBuffer<T> ofList(List<T> list) {
-        if(list.isEmpty()){
+        if (list.isEmpty()) {
             return empty();
         }
         return new ConfTokenBuffer<T>() {
@@ -67,7 +67,7 @@ public interface ConfTokenBuffer<T extends ConfToken> {
     }
 
     public static <T extends ConfToken> ConfTokenBuffer<T> of(T... list) {
-        if(list.length == 0){
+        if (list.length == 0) {
             return empty();
         }
         return new ConfTokenBuffer<T>() {

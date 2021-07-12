@@ -10,7 +10,7 @@ import lt.lb.configurablelexer.token.spec.ExtendedPositionAwareSplittableCallbac
  * @param <T>
  * @param <PosInfo>
  */
-public abstract class CommentAwareCallback<T extends ConfToken, PosInfo> extends ExtendedPositionAwareSplittableCallbackBase<T,PosInfo> {
+public abstract class CommentAwareCallback<T extends ConfToken, PosInfo> extends ExtendedPositionAwareSplittableCallbackBase<T, PosInfo> {
 
     public CommentAwareCallback(TokenizerCallbacks<T> delegate) {
         super(delegate);

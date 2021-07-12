@@ -24,6 +24,11 @@ public class SimplePosTokenizer extends BaseTokenizer<SimplePosToken> {
     }
 
     @Override
+    public boolean isBreakChar(int c) {
+        return false;
+    }
+
+    @Override
     public void reset(Reader input) {
         super.reset(input);
         lineAware.reset();// add all listeners  with reset

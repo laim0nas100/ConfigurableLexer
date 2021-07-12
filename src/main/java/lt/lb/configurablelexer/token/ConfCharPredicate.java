@@ -96,7 +96,7 @@ public class ConfCharPredicate implements IntPredicate {
         }
         if (disallowedChars != null) {
             return !disallowedChars.contains(c);
-        }else{
+        } else {
             return true; // same as disalowed is empty
         }
     }

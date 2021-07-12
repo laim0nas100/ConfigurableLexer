@@ -78,9 +78,9 @@ public abstract class PositionAwareCommentCallbackOld<T extends ConfToken, I> im
     public PositionAwareCommentCallbackOld<T, I> enableMultilineComment(String commentStart, String commentEnd) {
         return enableMultilineComment(commentStart, commentEnd, false);
     }
-    
-    protected void resetAllBut(CommentAwareCallback ob){
-         Stream.of(lcac, lcacs, mcac).filter(f -> f != null && f != ob).forEach(f -> f.resetInternalState());
+
+    protected void resetAllBut(CommentAwareCallback ob) {
+        Stream.of(lcac, lcacs, mcac).filter(f -> f != null && f != ob).forEach(f -> f.resetInternalState());
     }
 
     public PositionAwareCommentCallbackOld<T, I> enableMultilineComment(String commentStart, String commentEnd, boolean ignoreCase) {
@@ -203,7 +203,7 @@ public abstract class PositionAwareCommentCallbackOld<T extends ConfToken, I> im
             lcac = new LineCommentAwareCallback<T, I>(lastDecorated) {
                 @Override
                 public boolean isDisabled() {
-                   if (exclusiveComments) {
+                    if (exclusiveComments) {
                         return (exclusiveCallback != null && exclusiveCallback != this);
                     }
                     return super.isDisabled();

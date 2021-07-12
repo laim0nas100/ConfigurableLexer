@@ -37,7 +37,7 @@ public interface DelegatingConfTokenizer<T extends ConfToken> extends ConfTokeni
     public default void produceItems(Consumer<T> consumer) throws Exception {
         delegate().produceItems(consumer);
     }
-    
+
     @Override
     public default void reset(Reader input) {
         delegate().reset(input);
@@ -54,21 +54,19 @@ public interface DelegatingConfTokenizer<T extends ConfToken> extends ConfTokeni
     }
 
     @Override
-    public default void reset(String string){
+    public default void reset(String string) {
         delegate().reset(string);
     }
 
     @Override
-    public default void reset(){
+    public default void reset() {
         delegate().reset();
     }
 
     @Override
-    public default boolean isDisabled(){
+    public default boolean isDisabled() {
         return delegate().isDisabled();
     }
-    
-    
 
     @Override
     public default boolean readToBuffer() throws Exception {
@@ -96,7 +94,7 @@ public interface DelegatingConfTokenizer<T extends ConfToken> extends ConfTokeni
     }
 
     @Override
-    public default boolean hasCurrentBufferedItem(){
+    public default boolean hasCurrentBufferedItem() {
         return delegate().hasCurrentBufferedItem();
     }
 

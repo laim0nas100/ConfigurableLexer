@@ -10,12 +10,11 @@ import lt.lb.configurablelexer.token.StatefulTokenizerCallbacks;
  *
  * @author laim0nas100
  */
-public class MapStatefullCallbacks<T extends ConfToken,State> implements StatefulTokenizerCallbacks<T, State> {
+public class MapStatefullCallbacks<T extends ConfToken, State> implements StatefulTokenizerCallbacks<T, State> {
 
     protected State currState;
-    protected Map<State,TokenizerCallbacks<T>> callbacks = new HashMap<>();
-    
-    
+    protected Map<State, TokenizerCallbacks<T>> callbacks = new HashMap<>();
+
     @Override
     public void setState(State newState) {
         currState = newState;
@@ -30,5 +29,5 @@ public class MapStatefullCallbacks<T extends ConfToken,State> implements Statefu
     public TokenizerCallbacks<T> getCallbacks(State state) {
         return callbacks.get(state);
     }
-    
+
 }

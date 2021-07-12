@@ -21,7 +21,7 @@ public interface ConfTokenizer<T extends ConfToken> extends AutoCloseable, Token
 
     @Override
     public boolean readToBuffer() throws Exception;
-    
+
     @Override
     public boolean hasCurrentBufferedItem();
 

@@ -30,10 +30,10 @@ public abstract class StringAwareCallbackBase<T extends ConfToken, PosInfo> exte
         super.resetInternalState();
         escapeNextChar = false;
     }
-    
+
     @Override
     public void charListener(CharInfo chInfo, int c) {
-         if (isDisabled()) {
+        if (isDisabled()) {
             super.charListener(chInfo, c);
             return;
         }
@@ -53,8 +53,6 @@ public abstract class StringAwareCallbackBase<T extends ConfToken, PosInfo> exte
         }
         super.charListener(chInfo, c);
     }
-    
-    
 
     @Override
     public boolean isTokenChar(int c) {
@@ -65,8 +63,8 @@ public abstract class StringAwareCallbackBase<T extends ConfToken, PosInfo> exte
     public boolean isBreakChar(int c) {
         return !within && super.isBreakChar(c);
     }
-    
-     public IntPredicate getStartPred() {
+
+    public IntPredicate getStartPred() {
         return startPred;
     }
 

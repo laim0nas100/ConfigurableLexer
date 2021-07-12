@@ -5,7 +5,7 @@ package lt.lb.configurablelexer.token;
  * @author laim0nas100
  */
 public class BaseDelegatingTokenizerCallbacks<T extends ConfToken> implements DelegatingTokenizerCallbacks<T> {
-    
+
     protected TokenizerCallbacks<T> delegate;
 
     public BaseDelegatingTokenizerCallbacks(TokenizerCallbacks<T> delegate) {
@@ -23,7 +23,5 @@ public class BaseDelegatingTokenizerCallbacks<T extends ConfToken> implements De
     public TokenizerCallbacks<T> delegate() {
         return delegate;
     }
-    
-    
-    
+
 }

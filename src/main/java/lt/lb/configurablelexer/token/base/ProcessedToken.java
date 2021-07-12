@@ -6,8 +6,8 @@ import java.util.function.Function;
  *
  * @author laim0nas100
  */
-public class ProcessedToken<Inf,T> extends BaseStringToken<Inf> {
-    
+public class ProcessedToken<Inf, T> extends BaseStringToken<Inf> {
+
     protected T processedValue;
 
     public ProcessedToken() {
@@ -28,13 +28,13 @@ public class ProcessedToken<Inf,T> extends BaseStringToken<Inf> {
     public void setProcessedValue(T processedValue) {
         this.processedValue = processedValue;
     }
-    
-    public void processValue(Function<String,T> func){
+
+    public void processValue(Function<String, T> func) {
         setProcessedValue(func.apply(getValue()));
     }
 
     @Override
     public String stringValues() {
-        return super.stringValues()+ ", processedValue=" + processedValue;
+        return super.stringValues() + ", processedValue=" + processedValue;
     }
 }

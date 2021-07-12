@@ -2,7 +2,6 @@ package lt.lb.configurablelexer.parse.impl;
 
 import lt.lb.configurablelexer.parse.TokenMatcher;
 
-
 /**
  *
  * @author laim0nas100

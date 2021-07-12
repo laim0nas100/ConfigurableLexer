@@ -13,7 +13,7 @@ public class CharacterBuffer {
     private int length;
     char lastTrailingHighSurrogate;
 
-   public CharacterBuffer(char[] buffer, int offset, int length) {
+    public CharacterBuffer(char[] buffer, int offset, int length) {
         this.buffer = buffer;
         this.offset = offset;
         this.length = length;

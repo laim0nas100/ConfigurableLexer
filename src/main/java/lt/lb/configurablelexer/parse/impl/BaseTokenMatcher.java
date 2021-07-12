@@ -10,7 +10,7 @@ import lt.lb.configurablelexer.token.ConfToken;
  *
  * @author laim0nas100
  */
-public abstract class BaseTokenMatcher implements TokenMatcher {
+public abstract class BaseTokenMatcher<T extends ConfToken> implements TokenMatcher<T> {
 
     protected int length = 1;
     protected String name = "";
@@ -41,7 +41,7 @@ public abstract class BaseTokenMatcher implements TokenMatcher {
     }
 
     public static <T> T[] assertArray(T... array) {
-        if(array.length == 0){
+        if (array.length == 0) {
             throw new IllegalArgumentException("Empty arrays not allowed");
         }
         if (Stream.of(array).anyMatch(f -> f == null)) {

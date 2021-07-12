@@ -10,12 +10,13 @@ import lt.lb.configurablelexer.token.ConfTokenizer;
  *
  * @author laim0nas100
  */
-public abstract class MappingLexer<T extends ConfToken,O extends ConfToken> implements ConfTokenizer<T>{
-    
+public abstract class MappingLexer<T extends ConfToken, O extends ConfToken> implements ConfTokenizer<T> {
+
     protected int currentTokenIndex;
     protected ConfTokenBuffer<T> bufferedTokens;
+
     public abstract ConfTokenBuffer<T> map(ConfTokenBuffer<O> old);
-    
+
     public abstract ConfTokenizer<O> getOriginal();
 
     @Override
@@ -45,7 +46,7 @@ public abstract class MappingLexer<T extends ConfToken,O extends ConfToken> impl
         return getOriginal().readToBuffer();
     }
 
-   @Override
+    @Override
     public T getCurrentBufferedItem() throws Exception {
         return this.bufferedTokens.get(this.currentTokenIndex);
     }
@@ -69,6 +70,4 @@ public abstract class MappingLexer<T extends ConfToken,O extends ConfToken> impl
         getOriginal().close();
     }
 
-    
-    
 }

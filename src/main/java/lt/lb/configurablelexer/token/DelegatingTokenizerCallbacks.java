@@ -10,7 +10,7 @@ public interface DelegatingTokenizerCallbacks<T extends ConfToken> extends Token
     public default void reset() {
         delegate().reset();
     }
-    
+
     @Override
     public default void charListener(CharInfo chInfo, int c) {
         delegate().charListener(chInfo, c);
@@ -32,12 +32,10 @@ public interface DelegatingTokenizerCallbacks<T extends ConfToken> extends Token
     }
 
     @Override
-    public default boolean isDisabled(){
+    public default boolean isDisabled() {
         return delegate().isDisabled();
     }
-    
-    
-    
+
     public TokenizerCallbacks<T> delegate();
-    
+
 }

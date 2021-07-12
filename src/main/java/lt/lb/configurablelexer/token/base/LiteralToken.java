@@ -16,5 +16,5 @@ public class LiteralToken<Inf> extends BaseStringToken<Inf> {
     public LiteralToken(String value, Inf info) {
         super(value, info);
     }
-    
+
 }

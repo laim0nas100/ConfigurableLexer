@@ -190,7 +190,7 @@ public class Redirecter<WAY> {
         }
 
     }
-    
+
     public static class RedirecterConfTokenConstructor<T extends ConfToken> extends Redirecter<ConfTokenConstructor<T>> implements ConfTokenConstructor<T> {
 
         public RedirecterConfTokenConstructor(ConfTokenConstructor<T> first, ConfTokenConstructor<T> second) {
@@ -233,7 +233,7 @@ public class Redirecter<WAY> {
         }
 
     }
-    
+
     public static class RedirecterDisableAware extends Redirecter<DisableAware> implements DisableAware {
 
         public RedirecterDisableAware(DisableAware first, DisableAware second) {

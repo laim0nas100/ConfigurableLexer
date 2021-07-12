@@ -26,7 +26,7 @@ public abstract class ExtendedPositionAwareExclusiveCallbackAggregate<T extends 
     protected boolean exclusive;
 
     protected ExtendedPositionAwareSplittableCallback<T, I> exclusiveCallbackRef;
-    
+
     public ExtendedPositionAwareExclusiveCallbackAggregate(TokenizerCallbacks<T> delegate) {
         this.delegate = delegate;
         this.lastDecorated = delegate;

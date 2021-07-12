@@ -13,8 +13,8 @@ public interface Id {
     public default String stringValues() {
         return "";
     }
-    
-    public default String descriptiveString(){
-        return getClass().getSimpleName()+"{"+stringValues()+"}";
+
+    public default String descriptiveString() {
+        return getClass().getSimpleName() + "{" + stringValues() + "}";
     }
 }

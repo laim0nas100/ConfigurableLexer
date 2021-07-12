@@ -16,7 +16,7 @@ public class ReusableStringReader extends Reader {
 
     public ReusableStringReader(String str) {
         this.s = str;
-        if(s != null){
+        if (s != null) {
             size = str.length();
         }
     }

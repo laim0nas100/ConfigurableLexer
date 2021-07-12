@@ -48,8 +48,8 @@ public class ConfTokenizerCallbacks<T extends ConfToken> implements TokenizerCal
     }
 
     protected final Redirecter.RedirecterConfTokenConstructor<T> redirConstructor
-            = new Redirecter.RedirecterConfTokenConstructor((b,o,l) -> getNestedWithin().constructTokens(b, o, l), (b,o,l) -> constructor.constructTokens(b, o, l));
-    
+            = new Redirecter.RedirecterConfTokenConstructor((b, o, l) -> getNestedWithin().constructTokens(b, o, l), (b, o, l) -> constructor.constructTokens(b, o, l));
+
     @Override
     public ConfTokenBuffer<T> constructTokens(char[] buffer, int offset, int length) throws Exception {
         return redirConstructor.constructTokens(buffer, offset, length);

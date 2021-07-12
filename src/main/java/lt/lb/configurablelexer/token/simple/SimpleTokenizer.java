@@ -20,6 +20,11 @@ public class SimpleTokenizer extends BaseTokenizer<SimpleToken> {
         return isToken.test(c);
     }
     
+    @Override
+    public boolean isBreakChar(int c){
+        return false;
+    }
+
     public SimpleTokenizer(IntPredicate isToken) {
         this.isToken = Objects.requireNonNull(isToken);
     }
@@ -28,7 +33,6 @@ public class SimpleTokenizer extends BaseTokenizer<SimpleToken> {
     public void charListener(CharInfo chInfo, int c) {
         //
     }
-    
 
     @Override
     public ConfTokenBuffer<SimpleToken> constructTokens(char[] buffer, int offset, int length) throws Exception {

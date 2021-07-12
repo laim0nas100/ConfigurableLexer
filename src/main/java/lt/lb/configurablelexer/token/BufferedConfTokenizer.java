@@ -10,12 +10,12 @@ public abstract class BufferedConfTokenizer<T extends ConfToken> implements Conf
 
     protected ConfTokenBuffer<T> bufferedTokens = ConfTokenBuffer.of();
     protected int currentTokenIndex;
-    
+
     @Override
     public void reset(Reader input) {
-         bufferedTokens = ConfTokenBuffer.of();
-         currentTokenIndex = 0;
-         reset();
+        bufferedTokens = ConfTokenBuffer.of();
+        currentTokenIndex = 0;
+        reset();
     }
 
     @Override
@@ -30,7 +30,7 @@ public abstract class BufferedConfTokenizer<T extends ConfToken> implements Conf
 
     @Override
     public boolean hasNextBufferedItem() {
-        return bufferedTokens.size() > currentTokenIndex +1;
+        return bufferedTokens.size() > currentTokenIndex + 1;
     }
 
     @Override
@@ -41,5 +41,5 @@ public abstract class BufferedConfTokenizer<T extends ConfToken> implements Conf
         }
         throw new IllegalStateException("Need to read from input, no more buffered tokens left");
     }
-    
+
 }

@@ -3,8 +3,6 @@ package lt.lb.configurablelexer.lexer.matchers;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import lt.lb.commons.DLog;
-import lt.lb.configurablelexer.Id;
 
 /**
  *
@@ -47,9 +45,7 @@ public class RegexMatcher extends BreakingSerStringMatcher {
 
     @Override
     public String stringValues() {
-        return super.stringValues()+ ", pattern="+pattern.pattern();
+        return super.stringValues() + ", pattern=" + pattern.pattern();
     }
-    
-    
 
 }

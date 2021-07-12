@@ -62,7 +62,7 @@ public abstract class PositionAwareDefaultCallback<T extends ConfToken, I> exten
     }
 
     public PositionAwareDefaultCallback<T, I> enableMultilineComment(String commentStartEnd) {
-        return enableMultilineComment(commentStartEnd, commentStartEnd, false,false);
+        return enableMultilineComment(commentStartEnd, commentStartEnd, false, false);
     }
 
     public PositionAwareDefaultCallback<T, I> enableMultilineComment(String commentStart, String commentEnd) {

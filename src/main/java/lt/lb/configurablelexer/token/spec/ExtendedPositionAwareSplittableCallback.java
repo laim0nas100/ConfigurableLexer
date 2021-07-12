@@ -23,9 +23,9 @@ public interface ExtendedPositionAwareSplittableCallback<T extends ConfToken, Po
     public boolean isIgnore();
 
     public boolean isEarlyReturn();
-    
+
     public void setIgnore(boolean bool);
-    
+
     public void setEarlyReturn(boolean bool);
 
     /**
@@ -38,7 +38,7 @@ public interface ExtendedPositionAwareSplittableCallback<T extends ConfToken, Po
      */
     @Override
     public ConfTokenBuffer<T> constructTokens(char[] buffer, int offset, int length) throws Exception;
-    
+
     public T construct(PosInfo start, PosInfo end, char[] buffer, int offset, int length) throws Exception;
 
 }

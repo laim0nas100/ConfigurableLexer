@@ -9,17 +9,16 @@ import java.util.regex.Pattern;
 public class FloatMatcher extends RegexMatcher {
 
     public FloatMatcher(char sep, boolean optionalLeadingNumber) {
-        if(optionalLeadingNumber){
+        if (optionalLeadingNumber) {
             pattern = Pattern.compile("\\d*\\" + sep + "\\d+");
-        }else{
+        } else {
             pattern = Pattern.compile("\\d+\\" + sep + "\\d+");
         }
-        
+
     }
-    
 
     public FloatMatcher() {
-        this('.',false);
+        this('.', false);
     }
 
 }

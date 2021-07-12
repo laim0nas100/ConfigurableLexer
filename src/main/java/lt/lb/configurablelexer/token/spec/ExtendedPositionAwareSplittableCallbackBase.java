@@ -151,8 +151,7 @@ public abstract class ExtendedPositionAwareSplittableCallbackBase<T extends Conf
 
     /**
      * Adds new codepoint to the new buffer, if new buffer is of the same length
-     * as is toMatch. Does not change the passed buffer, unlike the other method
-     * {@link tryMatchNewBeginningAndClear(boolean, StringBuilder, String, int)
+     * as is toMatch. Does not change the passed buffer, unlike the other method      {@link tryMatchNewBeginningAndClear(boolean, StringBuilder, String, int)
      * }
      *
      * @param ignoreCase

@@ -21,7 +21,7 @@ public abstract class BaseTokenizer<T extends ConfToken> extends BufferedConfTok
     protected char[] buffer;
     CharacterBuffer ioBuffer;
     protected int maxTokenLen = 256;
-    protected OverheadAware overheadAware = ()-> false;
+    protected OverheadAware overheadAware = () -> false;
     protected int readerBufferSize = 256;
 
     public BaseTokenizer() {
@@ -29,9 +29,9 @@ public abstract class BaseTokenizer<T extends ConfToken> extends BufferedConfTok
 
     @Override
     public void reset(Reader input) {
-        if(input instanceof OverheadAware){
+        if (input instanceof OverheadAware) {
             overheadAware = (OverheadAware) input;
-        }else{
+        } else {
             input = new OverheadReader(input, readerBufferSize);
             overheadAware = (OverheadAware) input;
         }
@@ -72,7 +72,7 @@ public abstract class BaseTokenizer<T extends ConfToken> extends BufferedConfTok
 
             boolean isTokenChar = isTokenChar(c);
             boolean isBreakChar = isBreakChar(c);
-            boolean isLastChar  = !overheadAware.hasOverhead() && bufferIndex == ioBuffer.getLength();
+            boolean isLastChar = !overheadAware.hasOverhead() && bufferIndex == ioBuffer.getLength();
             charListener(CharInfoDefault.of(isTokenChar, isBreakChar, isLastChar), c);
             if (isTokenChar) {               // if it's a token char
                 if (length >= buffer.length - 1) { // check if a supplementary could run out of bounds
@@ -82,9 +82,9 @@ public abstract class BaseTokenizer<T extends ConfToken> extends BufferedConfTok
                 if (length >= maxTokenLen) { // buffer overflow! make sure to check for >= surrogate pair could break == test
                     break;
                 }
-            } 
+            }
             if (isBreakChar || (!isTokenChar && length > 0)) { // at non-token with chars or a break character
-                break;                      
+                break;
             }
         }
         currentTokenIndex = 0;
@@ -92,7 +92,6 @@ public abstract class BaseTokenizer<T extends ConfToken> extends BufferedConfTok
 
         return true;
     }
-
 
     @Override
     public void close() throws IOException {
@@ -113,8 +112,6 @@ public abstract class BaseTokenizer<T extends ConfToken> extends BufferedConfTok
     public boolean isBreakChar(int c) {
         return getCallbacks().isBreakChar(c);
     }
-    
-    
 
     @Override
     public void charListener(CharInfo chInfo, int c) {

@@ -84,7 +84,7 @@ public abstract class MultilineCommentAwareCallback<T extends ConfToken, PosInfo
         if (isDisabled()) {
             return super.isBreakChar(c);
         }
-        
+
         return super.isBreakChar(c) || (nest == 0 && tryMatchBeginning(ignoreCase, commentBufferEnd, commentEnd, c));
     }
 

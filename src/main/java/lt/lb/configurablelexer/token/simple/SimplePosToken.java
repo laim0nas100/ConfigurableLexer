@@ -13,5 +13,5 @@ public class SimplePosToken extends SimpleToken<Pos> {
 
     public SimplePosToken() {
     }
-    
+
 }

@@ -12,17 +12,14 @@ public class IntegerMatcher extends RegexMatcher {
         pattern = Pattern.compile("\\d+");
     }
 
-
     @Override
     public String id() {
-        return  getClass().getName() + (breaking ? ":breaking:" : "");
+        return getClass().getName() + (breaking ? ":breaking:" : "");
     }
 
     @Override
     public int minSize() {
         return 1;
     }
-    
-    
 
 }

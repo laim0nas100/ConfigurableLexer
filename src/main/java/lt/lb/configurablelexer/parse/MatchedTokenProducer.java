@@ -1,15 +1,15 @@
 package lt.lb.configurablelexer.parse;
 
-import java.util.Iterator;
 import lt.lb.configurablelexer.token.ConfToken;
 import lt.lb.configurablelexer.token.ConfTokenizer;
+import lt.lb.configurablelexer.utils.BufferedIterator;
 
 /**
  *
  * @author laim0nas100
  */
-public interface MatchedTokenProducer {
-    
+public interface MatchedTokenProducer<T extends ConfToken> extends BufferedIterator<MatchedTokens<T>> {
+
     public static class MatchedTokenProducerException extends Exception {
 
         public MatchedTokenProducerException(String message) {
@@ -17,7 +17,7 @@ public interface MatchedTokenProducer {
         }
 
     }
-    
-    public MatchedTokenProducer withTokenizer(ConfTokenizer<ConfToken> tokenizer);
-    
+
+    public MatchedTokenProducer withTokenizer(ConfTokenizer<T> tokenizer);
+
 }

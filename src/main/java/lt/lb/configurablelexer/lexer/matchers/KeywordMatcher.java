@@ -13,19 +13,19 @@ public class KeywordMatcher extends BreakingSerStringMatcher {
 
     public KeywordMatcher() {
     }
-    
+
     public KeywordMatcher(String val, boolean ignoreCase, boolean breaking) {
         this.keyword = val;
         this.ignoreCase = ignoreCase;
         this.breaking = breaking;
     }
-    
+
     public KeywordMatcher(String val, boolean breaking) {
-        this(val,false,breaking);
+        this(val, false, breaking);
     }
-    
+
     public KeywordMatcher(String val) {
-        this(val,false,false);
+        this(val, false, false);
     }
 
     public boolean isIgnoreCase() {
@@ -59,7 +59,7 @@ public class KeywordMatcher extends BreakingSerStringMatcher {
         int len = getKeyword().length();
         if (index == offset && len == localLength) {
             return makeMatch();
-        }else{
+        } else {
             int to = index + len;
             return makeMatch(index, to);
         }
@@ -77,9 +77,7 @@ public class KeywordMatcher extends BreakingSerStringMatcher {
 
     @Override
     public String stringValues() {
-        return super.stringValues()+", keyword="+keyword+", ignoreCase="+ignoreCase;
+        return super.stringValues() + ", keyword=" + keyword + ", ignoreCase=" + ignoreCase;
     }
-
-    
 
 }

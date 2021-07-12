@@ -8,12 +8,12 @@ import lt.lb.configurablelexer.token.TokenizerCallbacks;
  *
  * @author laim0nas100
  */
-public class BinaryStatefullCallbacks<T extends ConfToken> implements StatefulTokenizerCallbacks<T,Boolean>{
+public class BinaryStatefullCallbacks<T extends ConfToken> implements StatefulTokenizerCallbacks<T, Boolean> {
 
     protected TokenizerCallbacks<T> whenTrue;
     protected TokenizerCallbacks<T> whenFalse;
     protected boolean state;
-    
+
     public BinaryStatefullCallbacks(TokenizerCallbacks<T> whenTrue, TokenizerCallbacks<T> whenFalse) {
     }
 
@@ -35,9 +35,7 @@ public class BinaryStatefullCallbacks<T extends ConfToken> implements StatefulTo
     public void setWhenFalse(TokenizerCallbacks<T> whenFalse) {
         this.whenFalse = whenFalse;
     }
-    
-    
-    
+
     @Override
     public void setState(Boolean newState) {
         this.state = newState;
@@ -52,6 +50,5 @@ public class BinaryStatefullCallbacks<T extends ConfToken> implements StatefulTo
     public TokenizerCallbacks<T> getCallbacks(Boolean state) {
         return state ? whenTrue : whenFalse;
     }
-    
-    
+
 }

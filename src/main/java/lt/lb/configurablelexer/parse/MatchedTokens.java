@@ -3,6 +3,7 @@ package lt.lb.configurablelexer.parse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import lt.lb.configurablelexer.Id;
 import lt.lb.configurablelexer.token.ConfToken;
 import org.apache.commons.lang3.StringUtils;
 
@@ -10,12 +11,12 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author laim0nas100
  */
-public class MatchedTokens {
+public class MatchedTokens<T extends ConfToken> implements Id {
 
-    public final List<TokenMatcher> matchedBy;
-    public final List<ConfToken> tokens;
+    public final List<TokenMatcher<T>> matchedBy;
+    public final List<T> tokens;
 
-    public MatchedTokens(List<TokenMatcher> matched, List<ConfToken> tokens) {
+    public MatchedTokens(List<TokenMatcher<T>> matched, List<T> tokens) {
 
         if (matched == null || matched.isEmpty()) {
             throw new IllegalArgumentException("Empty matched");
@@ -53,7 +54,7 @@ public class MatchedTokens {
 
     @Override
     public String toString() {
-        return "matchedBy=" + names() + ", tokens=" + values();
+        return descriptiveString();
     }
 
     public String names() {
@@ -67,4 +68,10 @@ public class MatchedTokens {
     public int count() {
         return tokens.size();
     }
+
+    @Override
+    public String stringValues() {
+        return "matchedBy=" + names() + ", tokens=" + values();
+    }
+
 }

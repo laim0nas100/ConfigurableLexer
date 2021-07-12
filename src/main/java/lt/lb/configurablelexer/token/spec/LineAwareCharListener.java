@@ -23,7 +23,7 @@ public class LineAwareCharListener implements CharListener {
 
     @Override
     public void charListener(CharInfo chInfo, int c) {
-         if (isDisabled()) {
+        if (isDisabled()) {
             return;
         }
         if (lastChar == '\n') {// reaction one token char later assuming we break on new line
@@ -52,7 +52,7 @@ public class LineAwareCharListener implements CharListener {
     }
 
     public Pos getPos() {
-        return new Pos(getLine()+1, getColumn());
+        return new Pos(getLine() + 1, getColumn());
     }
 
 }

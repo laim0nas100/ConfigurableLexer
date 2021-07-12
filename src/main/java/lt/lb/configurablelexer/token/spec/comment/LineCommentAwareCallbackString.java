@@ -31,7 +31,7 @@ public abstract class LineCommentAwareCallbackString<T extends ConfToken, I> ext
         super.resetInternalState();
         commentPrefixBuffer.setLength(0);
     }
-    
+
     @Override
     public void charListener(CharInfo chInfo, int c) {
         if (isDisabled()) {

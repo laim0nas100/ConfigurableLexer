@@ -2,12 +2,11 @@ package lt.lb.configurablelexer.parse.impl;
 
 import lt.lb.configurablelexer.token.ConfToken;
 
-
 /**
  *
  * @author laim0nas100
  */
-public class AnyTokenMatcher extends BaseTokenMatcher {
+public class AnyTokenMatcher<T extends ConfToken> extends BaseTokenMatcher<T> {
 
     public AnyTokenMatcher(int length, String name) {
         super(length, name);

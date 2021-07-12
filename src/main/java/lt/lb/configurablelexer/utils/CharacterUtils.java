@@ -173,7 +173,7 @@ public class CharacterUtils {
         }
 
         if (Character.isHighSurrogate(charBuffer[buffer.getLength() - 1])) {
-            int len = buffer.getLength()-1;
+            int len = buffer.getLength() - 1;
             buffer.setLength(len);
             buffer.lastTrailingHighSurrogate = charBuffer[len];
         }

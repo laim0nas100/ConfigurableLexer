@@ -16,5 +16,5 @@ public class StringToken<Inf> extends BaseStringToken<Inf> {
     public StringToken(String value, Inf info) {
         super(value, info);
     }
-    
+
 }

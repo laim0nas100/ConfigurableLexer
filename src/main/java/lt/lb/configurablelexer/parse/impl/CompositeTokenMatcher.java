@@ -3,13 +3,14 @@ package lt.lb.configurablelexer.parse.impl;
 import java.util.Comparator;
 import java.util.stream.Stream;
 import lt.lb.configurablelexer.parse.TokenMatcher;
+import lt.lb.configurablelexer.token.ConfToken;
 
 /**
  *
  * @author laim0nas100
  */
-public abstract class CompositeTokenMatcher extends BaseTokenMatcher {
-    
+public abstract class CompositeTokenMatcher<T extends ConfToken> extends BaseTokenMatcher<T> {
+
     public static final Comparator<Class> typeComparator = new Comparator<Class>() {
         @Override
         public int compare(Class o1, Class o2) {
@@ -20,11 +21,11 @@ public abstract class CompositeTokenMatcher extends BaseTokenMatcher {
             if (o1 == null) {
                 return -1;
             }
-            
+
             if (o2 == null) {
                 return 1;
             }
-            
+
             boolean i_1 = instanceOfClass(o1, o2);
             boolean i_2 = instanceOfClass(o2, o1);
             if (i_1 && !i_2) {
@@ -38,7 +39,7 @@ public abstract class CompositeTokenMatcher extends BaseTokenMatcher {
         }
 
     };
-    
+
     /**
      * Null-friendly {@code Class.isAssignableFrom} version.
      *
@@ -58,7 +59,6 @@ public abstract class CompositeTokenMatcher extends BaseTokenMatcher {
             return of.isAssignableFrom(what);
         }
     }
-    
 
     protected TokenMatcher[] matchers;
 

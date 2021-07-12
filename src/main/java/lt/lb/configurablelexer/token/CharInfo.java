@@ -23,18 +23,18 @@ public interface CharInfo {
             this.breakChar = breakChar;
             this.lastChar = lastChar;
         }
-        
-        public static CharInfoDefault of(boolean isToken, boolean isBreak, boolean isLast){
-            if(isToken){
-                if(isBreak){
+
+        public static CharInfoDefault of(boolean isToken, boolean isBreak, boolean isLast) {
+            if (isToken) {
+                if (isBreak) {
                     return isLast ? TOKEN_BREAK_LAST : TOKEN_BREAK_NOLAST;
-                }else{
+                } else {
                     return isLast ? TOKEN_NOBREAK_LAST : TOKEN_NOBREAK_NOLAST;
                 }
-            }else{
-                if(isBreak){
+            } else {
+                if (isBreak) {
                     return isLast ? NOTOKEN_BREAK_LAST : NOTOKEN_BREAK_NOLAST;
-                }else{
+                } else {
                     return isLast ? NOTOKEN_NOBREAK_LAST : NOTOKEN_NOBREAK_NOLAST;
                 }
             }
@@ -42,10 +42,8 @@ public interface CharInfo {
 
         @Override
         public String toString() {
-            return "CharInfoDefault{" + (tokenChar ? "tokenChar " :"")+ (breakChar ? "breakChar ": "") + (lastChar ? "lastChar ":"")+"}";
+            return "CharInfoDefault{" + (tokenChar ? "tokenChar " : "") + (breakChar ? "breakChar " : "") + (lastChar ? "lastChar " : "") + "}";
         }
-        
-        
 
         @Override
         public boolean isTokenChar() {

@@ -7,7 +7,7 @@ import lt.lb.configurablelexer.token.ConfToken;
  *
  * @author laim0nas100
  */
-public class ConcatTokenMatcher extends CompositeTokenMatcher {
+public class ConcatTokenMatcher<T extends ConfToken> extends CompositeTokenMatcher<T> {
 
     public ConcatTokenMatcher(String name, TokenMatcher... matchers) {
         super(sumLength(matchers), name, matchers);
