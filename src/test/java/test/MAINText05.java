@@ -1,10 +1,9 @@
-package lt.lb.configurablelexer;
+package test;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.util.regex.Pattern;
 import lt.lb.commons.DLog;
 import lt.lb.configurablelexer.lexer.SimpleLexer;
 import lt.lb.configurablelexer.lexer.matchers.FloatMatcher;
@@ -23,16 +22,18 @@ import lt.lb.configurablelexer.token.TokenizerCallbacks;
 import lt.lb.configurablelexer.token.base.CommentToken;
 import lt.lb.configurablelexer.token.base.LiteralToken;
 import lt.lb.configurablelexer.token.base.NumberToken;
+import lt.lb.configurablelexer.token.base.StringToken;
 import lt.lb.configurablelexer.token.simple.Pos;
-import lt.lb.configurablelexer.token.spec.comment.LineCommentAwareCallback;
-import lt.lb.configurablelexer.token.spec.comment.LineCommentAwareCallbackString;
-import lt.lb.configurablelexer.token.spec.comment.MultilineCommentAwareCallback;
+import lt.lb.configurablelexer.token.spec.ExtendedPositionAwareSplittableCallback;
+import lt.lb.configurablelexer.token.spec.PositionAwareDefaultCallback;
+import lt.lb.configurablelexer.token.spec.string.StringAwareCallback;
+import lt.lb.configurablelexer.token.spec.comment.CommentAwareCallback;
 
 /**
  *
  * @author laim0nas100
  */
-public class MAINText04 {
+public class MAINText05 {
 
     public static void main(String[] args) throws Exception {
         DLog main = DLog.main();
@@ -51,76 +52,32 @@ public class MAINText04 {
 
         callbacks.addListener(lineListener);
 
-        LineCommentAwareCallback<ConfToken, Pos> lineCommentCallback = new LineCommentAwareCallback<ConfToken, Pos>(callbacks) {
+        PositionAwareDefaultCallback<ConfToken, Pos> commentCallback = new PositionAwareDefaultCallback<ConfToken, Pos>(callbacks) {
+
             @Override
-            public Pos start() {
+            public Pos getPosition() {
                 return lineListener.getPos();
             }
 
             @Override
-            public Pos mid() {
-                return lineListener.getPos();
+            public ConfToken construct(ExtendedPositionAwareSplittableCallback cb, Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
+                if(cb instanceof CommentAwareCallback){
+                    return new CommentToken(String.valueOf(buffer, offset, length), start);
+                }
+                if(cb instanceof StringAwareCallback){
+                    return new StringToken(String.valueOf(buffer, offset, length), start);
+                }
+                throw new IllegalStateException("Unrecognized callback "+cb);
             }
+            
+            
 
-            @Override
-            public Pos end() {
-                return lineListener.getPos();
-            }
+        }
+                .enableLineComment('#', '$')
+                .enableLineComment("//")
+                .enableMultilineComment("/*", "*/");
 
-            @Override
-            public ConfToken construct(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
-                return new CommentToken<>(String.valueOf(buffer, offset, length), start);
-            }
-        };
-        lineCommentCallback.setCommentStart(ConfCharPredicate.ofChars('#'));
-        LineCommentAwareCallbackString<ConfToken, Pos> lineCommentCallbackString = new LineCommentAwareCallbackString<ConfToken, Pos>(lineCommentCallback) {
-            @Override
-            public Pos start() {
-                return lineListener.getPos();
-            }
-
-            @Override
-            public Pos mid() {
-                return lineListener.getPos();
-            }
-
-            @Override
-            public Pos end() {
-                return lineListener.getPos();
-            }
-
-            @Override
-            public ConfToken construct(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
-                return new CommentToken<>(String.valueOf(buffer, offset, length), start);
-            }
-        };
-        lineCommentCallbackString.setCommentStart("//");
-        MultilineCommentAwareCallback<ConfToken, Pos> multiLineCommentCallback = new MultilineCommentAwareCallback<ConfToken, Pos>(lineCommentCallbackString) {
-            @Override
-            public Pos start() {
-                return lineListener.getPos();
-            }
-
-            @Override
-            public Pos mid() {
-                return lineListener.getPos();
-            }
-
-            @Override
-            public Pos end() {
-                return lineListener.getPos();
-            }
-
-            @Override
-            public ConfToken construct(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
-                return new CommentToken<>(String.valueOf(buffer, offset, length), start);
-            }
-
-        };
-        multiLineCommentCallback.setCommentStart("/*");
-        multiLineCommentCallback.setCommentEnd("*/");
-
-        callbacks.nest(t->multiLineCommentCallback);
+        callbacks.nest(t -> commentCallback);
 
         BaseTokenizer tokenizer_with_comments = new BaseTokenizer() {
 

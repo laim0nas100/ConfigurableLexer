@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package lt.lb.configurablelexer;
+package test;
 
 import java.io.File;
 import java.io.FileReader;
@@ -19,9 +19,8 @@ import lt.lb.configurablelexer.lexer.matchers.KeywordMatcher;
 import lt.lb.configurablelexer.token.base.KeywordToken;
 import lt.lb.configurablelexer.token.base.BaseStringToken;
 import lt.lb.configurablelexer.token.BaseTokenizer;
-import lt.lb.configurablelexer.token.CharInfo;
 import lt.lb.configurablelexer.token.ConfCharPredicate;
-import lt.lb.configurablelexer.token.ConfTokenBuffer;
+import lt.lb.configurablelexer.token.ConfToken;
 import lt.lb.configurablelexer.token.ConfTokenizer;
 import lt.lb.configurablelexer.token.ConfTokenizerCallbacks;
 import lt.lb.configurablelexer.token.spec.LineAwareCharListener;
@@ -30,12 +29,14 @@ import lt.lb.configurablelexer.token.base.CommentToken;
 import lt.lb.configurablelexer.token.base.LiteralToken;
 import lt.lb.configurablelexer.token.base.NumberToken;
 import lt.lb.configurablelexer.token.simple.Pos;
+import lt.lb.configurablelexer.token.spec.comment.LineCommentAwareCallback;
+import lt.lb.configurablelexer.token.spec.comment.LineCommentAwareCallbackString;
 
 /**
  *
  * @author laim0nas100
  */
-public class MAINText01 {
+public class MAINText03 {
 
     public static void main(String[] args) throws Exception {
         DLog main = DLog.main();
@@ -44,79 +45,76 @@ public class MAINText01 {
         main.surroundString = false;
         main.threadName = false;
         DLog.useTimeFormat(main, "HH:mm:ss.SSS ");
-        Pattern compile = Pattern.compile("\\d+\\.\\d+");
         Reader input = new FileReader(new File("parse_text.txt"), StandardCharsets.UTF_8);
 
-        ConfTokenizerCallbacks callbacks = new ConfTokenizerCallbacks<>();
-        ConfCharPredicate tokenPred = new ConfCharPredicate();
-        tokenPred.disallowWhen(Character::isWhitespace);
-
-        callbacks.setTokenCharPredicate(tokenPred);
+        ConfTokenizerCallbacks callbacks = new ConfTokenizerCallbacks<>().setTokenCharPredicate(
+                new ConfCharPredicate().disallowWhen(Character::isWhitespace)
+        );
 
         LineAwareCharListener lineListener = new LineAwareCharListener();
 
         callbacks.addListener(lineListener);
 
+        LineCommentAwareCallback<ConfToken, Pos> lineCommentCallback = new LineCommentAwareCallback<ConfToken, Pos>(callbacks) {
+
+            @Override
+            public Pos start() {
+                return lineListener.getPos();
+            }
+
+            @Override
+            public Pos mid() {
+                return lineListener.getPos();
+            }
+
+            @Override
+            public Pos end() {
+                return lineListener.getPos();
+            }
+
+            @Override
+            public ConfToken construct(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
+                return new CommentToken<>(String.valueOf(buffer, offset, length), start);
+            }
+        };
+        lineCommentCallback.setCommentStart(ConfCharPredicate.ofChars('#'));
+        LineCommentAwareCallbackString<ConfToken, Pos> lineCommentCallbackToken = new LineCommentAwareCallbackString<ConfToken, Pos>(lineCommentCallback) {
+
+            @Override
+            public Pos start() {
+                return lineListener.getPos();
+            }
+
+            @Override
+            public Pos mid() {
+                return lineListener.getPos();
+            }
+
+            @Override
+            public Pos end() {
+                return lineListener.getPos();
+            }
+
+            @Override
+            public ConfToken construct(Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
+                return new CommentToken<>(String.valueOf(buffer, offset, length), start);
+            }
+        };
+        callbacks.nest(t->lineCommentCallbackToken);
+        lineCommentCallbackToken.setCommentStart("//");
+
         BaseTokenizer tokenizer_with_comments = new BaseTokenizer() {
-            boolean inLineComment;
-            boolean constructComment;
 
             @Override
             protected TokenizerCallbacks getCallbacks() {
                 return callbacks;
             }
-
-            @Override
-            public void charListener(CharInfo chInfo, int c) {
-                if (inLineComment) {
-                    if (c == '\n') {
-                        inLineComment = false;
-                        constructComment = true;
-                    }
-                } else if (c == '#') {
-                    if (!inLineComment) {
-                        inLineComment = true;
-                    }
-
-                }
-
-                super.charListener(chInfo, c);
-            }
-
-            @Override
-            public boolean isTokenChar(int c) {
-                if (inLineComment) {
-                    return c != '\n';
-                }
-                return super.isTokenChar(c);
-            }
-
-            @Override
-            public ConfTokenBuffer constructTokens(char[] buffer, int offset, int length) throws Exception {
-                if (constructComment) {
-                    constructComment = false;
-                    return ConfTokenBuffer.of(new CommentToken<>(String.valueOf(buffer, offset, length), lineListener.getPos(offset, length)));
-
-                }
-                return super.constructTokens(buffer, offset, length);
-            }
-
-            @Override
-            public boolean isBreakChar(int c) {
-                if (!inLineComment) {
-                    if (c == '#') {
-                        return true;
-                    }
-                }
-                return super.isBreakChar(c);
-            }
-
         };
 
         SimpleLexer lexer = new SimpleLexer(tokenizer_with_comments) {
             @Override
             public BaseStringToken<Pos> makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String str) throws Exception {
-                Pos pos = new Pos(lineListener.getLine() + 1, from + lineListener.getColumn() - str.length());
+                Pos pos = lineListener.getPos(from, str.length());
                 String val = str.substring(from, to);
                 if (matcher.matcher instanceof KeywordMatcher) {
                     return new KeywordToken<>(val, pos);
@@ -138,7 +136,7 @@ public class MAINText01 {
 
             @Override
             public BaseStringToken<Pos> makeLiteral(int from, int to, String str) throws Exception {
-                Pos pos = new Pos(lineListener.getLine() + 1, from + lineListener.getColumn() - str.length());
+                Pos pos = lineListener.getPos(from, str.length());
                 return new LiteralToken<>(str.substring(from, to), pos);
             }
         };

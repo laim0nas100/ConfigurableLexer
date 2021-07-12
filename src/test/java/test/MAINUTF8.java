@@ -1,4 +1,4 @@
-package lt.lb.configurablelexer;
+package test;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -19,12 +19,12 @@ import lt.lb.configurablelexer.token.simple.SimpleTokenizer;
  *
  * @author laim0nas100
  */
-public class MAIN {
+public class MAINUTF8 {
     public static final boolean DEBUG = false;
 
     public static void main(String[] args) throws Exception {
 
-        String term = "\nok1 ok2\n *hell?o?? *help?me?jesus?\n" + "  NOT  **something else?* regular";
+        String term = "\nok1 ok2\n *hell?o??" +" NOT  **something else?* regular";
 
         term += "你好, おはよう, α-Ω\uD834\uDD1E";
 
@@ -47,6 +47,11 @@ public class MAIN {
             @Override
             public boolean isTokenChar(int c) {
                 return !Character.isWhitespace(c);
+            }
+            
+            @Override
+            public boolean isBreakChar(int c){
+                return false;
             }
 
             @Override
@@ -78,7 +83,6 @@ public class MAIN {
         };
 
         SimplePosTokenizer simplePosTokenizer = new SimplePosTokenizer(c -> !Character.isWhitespace(c));
-        SimpleTokenizer simpleTokenizer = new SimpleTokenizer(c -> !Character.isWhitespace(c));
         List list = new ArrayList<>();
         ConfTokenizer myTokenizer = simplePosTokenizer;
         myTokenizer.reset(term);

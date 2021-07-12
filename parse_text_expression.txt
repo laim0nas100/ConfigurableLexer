@@ -1,0 +1,14 @@
+/*
+
+comment
+    /*
+
+    nested
+    */
+
+out
+*/
+
+more text
+
+int number = 12 + 32 * 15;
