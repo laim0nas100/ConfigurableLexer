@@ -20,15 +20,22 @@ public abstract class BufferedIteratorList<T> implements BufferedIterator<T> {
      * @param currentList
      * @return
      */
-    protected abstract Optional<List<T>> produceNextList(Optional<List<T>> currentList);
+    protected abstract Optional<List<T>> produceNextList(Optional<List<T>> currentList) throws Exception;
 
     protected Optional<List<T>> getCurrentList() {
         return currentList;
     }
 
+    protected void setCurrentList(Optional<List<T>> list) {
+        this.currentList = list;
+    }
+
     @Override
     public boolean readToBuffer() throws Exception {
-        return produceNextList(getCurrentList()).isPresent();
+        Optional<List<T>> produceNextList = produceNextList(getCurrentList());
+        setCurrentList(produceNextList);
+        currentIndex = 0;
+        return produceNextList.isPresent();
     }
 
     @Override
