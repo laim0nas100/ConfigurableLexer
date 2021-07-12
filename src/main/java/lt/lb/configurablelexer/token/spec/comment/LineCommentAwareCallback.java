@@ -1,7 +1,6 @@
 package lt.lb.configurablelexer.token.spec.comment;
 
 import java.util.function.IntPredicate;
-import lt.lb.commons.DLog;
 import lt.lb.configurablelexer.token.CharInfo;
 import lt.lb.configurablelexer.token.ConfCharPredicate;
 import lt.lb.configurablelexer.token.ConfToken;
@@ -28,13 +27,11 @@ public abstract class LineCommentAwareCallback<T extends ConfToken, PosInfo> ext
         if (within) {
             if (c == '\n') {
                 within = false;
-//                DLog.print("END LineCommentAwareCallback");
                 lastEndInfo = end();
                 construct = true;
             }
         } else if (commentStart.test(c)) {
             within = true;
-//            DLog.print("START LineCommentAwareCallback");
             lastStartInfo = start();
 
         }

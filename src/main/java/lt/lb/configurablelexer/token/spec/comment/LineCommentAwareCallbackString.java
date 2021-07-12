@@ -1,6 +1,5 @@
 package lt.lb.configurablelexer.token.spec.comment;
 
-import lt.lb.commons.DLog;
 import lt.lb.configurablelexer.token.CharInfo;
 import lt.lb.configurablelexer.token.ConfToken;
 import lt.lb.configurablelexer.token.TokenizerCallbacks;
@@ -40,14 +39,12 @@ public abstract class LineCommentAwareCallbackString<T extends ConfToken, I> ext
         }
         if (within && c == '\n') {
             within = false;
-//            DLog.print("END LineCommentAwareCallbackString");
             lastEndInfo = end();
             construct = true;
         }
         if (!construct) {// not ended comment
             if (tryMatchNewBeginningAndClear(ignoreCase, commentPrefixBuffer, commentStart, c)) {
                 within = true;
-//                 DLog.print("START LineCommentAwareCallbackString");
                 lastStartInfo = start();
             }
         }

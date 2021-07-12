@@ -7,15 +7,9 @@ package test;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import lt.lb.commons.DLog;
 import lt.lb.configurablelexer.lexer.SimpleLexer;
 import lt.lb.configurablelexer.lexer.matchers.FloatMatcher;
 import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
@@ -26,7 +20,6 @@ import lt.lb.configurablelexer.token.base.BaseStringToken;
 import lt.lb.configurablelexer.token.BaseTokenizer;
 import lt.lb.configurablelexer.token.ConfCharPredicate;
 import lt.lb.configurablelexer.token.ConfToken;
-import lt.lb.configurablelexer.token.ConfTokenBuffer;
 import lt.lb.configurablelexer.token.ConfTokenizer;
 import lt.lb.configurablelexer.token.ConfTokenizerCallbacks;
 import lt.lb.configurablelexer.token.spec.LineAwareCharListener;
@@ -35,7 +28,6 @@ import lt.lb.configurablelexer.token.base.CommentToken;
 import lt.lb.configurablelexer.token.base.LiteralToken;
 import lt.lb.configurablelexer.token.base.NumberToken;
 import lt.lb.configurablelexer.token.simple.Pos;
-import lt.lb.configurablelexer.token.simple.SimplePosToken;
 import lt.lb.configurablelexer.token.spec.comment.LineCommentAwareCallback;
 
 /**
@@ -45,12 +37,6 @@ import lt.lb.configurablelexer.token.spec.comment.LineCommentAwareCallback;
 public class MAINText02 {
 
     public static void main(String[] args) throws Exception {
-        DLog main = DLog.main();
-        main.async = false;
-        main.stackTrace = false;
-        main.surroundString = false;
-        main.threadName = false;
-        DLog.useTimeFormat(main, "HH:mm:ss.SSS ");
         Pattern compile = Pattern.compile("\\d+\\.\\d+");
         Reader input = new FileReader(new File("parse_text.txt"), StandardCharsets.UTF_8);
 
@@ -87,7 +73,7 @@ public class MAINText02 {
             }
         };
         lineCommentCallback.setCommentStart(ConfCharPredicate.ofChars('#'));
-        callbacks.nest(t->lineCommentCallback);
+        callbacks.nest(t -> lineCommentCallback);
 
         BaseTokenizer tokenizer_with_comments = new BaseTokenizer() {
 
@@ -138,11 +124,11 @@ public class MAINText02 {
 
         ConfTokenizer myTokenizer = lexer;
         myTokenizer.reset(input);
+        StringBuilder sb = new StringBuilder();
         myTokenizer.produceItems(t -> {
-            DLog.print(t);
+            sb.append(t).append("\n");
         });
+        System.out.println(sb);
         input.close();
-
-        DLog.close();
     }
 }

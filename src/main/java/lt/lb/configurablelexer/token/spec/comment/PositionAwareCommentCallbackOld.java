@@ -1,9 +1,7 @@
 package lt.lb.configurablelexer.token.spec.comment;
 
-import java.util.Objects;
 import java.util.function.IntPredicate;
 import java.util.stream.Stream;
-import lt.lb.commons.DLog;
 import lt.lb.configurablelexer.token.ConfCharPredicate;
 import lt.lb.configurablelexer.token.ConfToken;
 import lt.lb.configurablelexer.token.DelegatingTokenizerCallbacks;
@@ -99,9 +97,7 @@ public abstract class PositionAwareCommentCallbackOld<T extends ConfToken, I> im
                 public I start() {
                     if (exclusiveComments) {
                         resetAllBut(this);
-                        if (exclusiveCallback != null) {
-                            DLog.print(exclusiveCallback);
-                        }
+                        assert exclusiveCallback == null;
                         exclusiveCallback = this;
                     }
                     return getPosition();
@@ -156,9 +152,7 @@ public abstract class PositionAwareCommentCallbackOld<T extends ConfToken, I> im
                 public I start() {
                     if (exclusiveComments) {
                         resetAllBut(this);
-                        if (exclusiveCallback != null) {
-                            DLog.print(exclusiveCallback);
-                        }
+                        assert exclusiveCallback == null;
                         exclusiveCallback = this;
 
                     }
@@ -213,9 +207,7 @@ public abstract class PositionAwareCommentCallbackOld<T extends ConfToken, I> im
                 public I start() {
                     if (exclusiveComments) {
                         resetAllBut(this);
-                        if (exclusiveCallback != null) {
-                            DLog.print(exclusiveCallback);
-                        }
+                        assert exclusiveCallback == null;
                         exclusiveCallback = this;
                     }
                     return getPosition();

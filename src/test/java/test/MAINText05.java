@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import lt.lb.commons.DLog;
 import lt.lb.configurablelexer.lexer.SimpleLexer;
 import lt.lb.configurablelexer.lexer.matchers.FloatMatcher;
 import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
@@ -36,12 +35,6 @@ import lt.lb.configurablelexer.token.spec.comment.CommentAwareCallback;
 public class MAINText05 {
 
     public static void main(String[] args) throws Exception {
-        DLog main = DLog.main();
-        main.async = false;
-        main.stackTrace = false;
-        main.surroundString = false;
-        main.threadName = false;
-        DLog.useTimeFormat(main, "HH:mm:ss.SSS ");
         Reader input = new FileReader(new File("parse_text.txt"), StandardCharsets.UTF_8);
 
         ConfTokenizerCallbacks callbacks = new ConfTokenizerCallbacks<>().setTokenCharPredicate(
@@ -61,16 +54,14 @@ public class MAINText05 {
 
             @Override
             public ConfToken construct(ExtendedPositionAwareSplittableCallback cb, Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
-                if(cb instanceof CommentAwareCallback){
+                if (cb instanceof CommentAwareCallback) {
                     return new CommentToken(String.valueOf(buffer, offset, length), start);
                 }
-                if(cb instanceof StringAwareCallback){
+                if (cb instanceof StringAwareCallback) {
                     return new StringToken(String.valueOf(buffer, offset, length), start);
                 }
-                throw new IllegalStateException("Unrecognized callback "+cb);
+                throw new IllegalStateException("Unrecognized callback " + cb);
             }
-            
-            
 
         }
                 .enableLineComment('#', '$')
@@ -128,11 +119,12 @@ public class MAINText05 {
 
         ConfTokenizer myTokenizer = lexer;
         myTokenizer.reset(input);
+        StringBuilder sb = new StringBuilder();
         myTokenizer.produceItems(t -> {
-            DLog.print(t);
+            sb.append(t).append("\n");
         });
+        System.out.println(sb);
         input.close();
 
-        DLog.close();
     }
 }

@@ -11,4 +11,4 @@ out
 
 more text
 
-int number = 12 + 32 * 15;
+int number = 12 + 32 * 15 - 10;

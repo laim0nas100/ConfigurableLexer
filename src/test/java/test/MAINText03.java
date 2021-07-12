@@ -1,16 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package test;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.util.regex.Pattern;
-import lt.lb.commons.DLog;
 import lt.lb.configurablelexer.lexer.SimpleLexer;
 import lt.lb.configurablelexer.lexer.matchers.FloatMatcher;
 import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
@@ -39,12 +32,6 @@ import lt.lb.configurablelexer.token.spec.comment.LineCommentAwareCallbackString
 public class MAINText03 {
 
     public static void main(String[] args) throws Exception {
-        DLog main = DLog.main();
-        main.async = false;
-        main.stackTrace = false;
-        main.surroundString = false;
-        main.threadName = false;
-        DLog.useTimeFormat(main, "HH:mm:ss.SSS ");
         Reader input = new FileReader(new File("parse_text.txt"), StandardCharsets.UTF_8);
 
         ConfTokenizerCallbacks callbacks = new ConfTokenizerCallbacks<>().setTokenCharPredicate(
@@ -100,7 +87,7 @@ public class MAINText03 {
                 return new CommentToken<>(String.valueOf(buffer, offset, length), start);
             }
         };
-        callbacks.nest(t->lineCommentCallbackToken);
+        callbacks.nest(t -> lineCommentCallbackToken);
         lineCommentCallbackToken.setCommentStart("//");
 
         BaseTokenizer tokenizer_with_comments = new BaseTokenizer() {
@@ -152,11 +139,12 @@ public class MAINText03 {
 
         ConfTokenizer myTokenizer = lexer;
         myTokenizer.reset(input);
+        StringBuilder sb = new StringBuilder();
         myTokenizer.produceItems(t -> {
-            DLog.print(t);
+            sb.append(t).append("\n");
         });
+        System.out.println(sb);
         input.close();
 
-        DLog.close();
     }
 }

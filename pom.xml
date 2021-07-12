@@ -7,10 +7,9 @@
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
-            <groupId>lt.lb.commons</groupId>
-            <artifactId>commonslb-log</artifactId>
-            <version>local-jar</version>
-            <type>jar</type>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.11</version>
         </dependency>
     </dependencies>
     <properties>

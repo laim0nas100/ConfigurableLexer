@@ -1,18 +1,6 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package test;
 
-import java.io.File;
-import java.io.PrintWriter;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import lt.lb.commons.DLog;
 import lt.lb.configurablelexer.lexer.SimpleLexer;
 import lt.lb.configurablelexer.lexer.matchers.FloatMatcher;
 import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
@@ -29,7 +17,6 @@ import lt.lb.configurablelexer.token.TokenizerCallbacks;
 import lt.lb.configurablelexer.token.base.LiteralToken;
 import lt.lb.configurablelexer.token.base.NumberToken;
 import lt.lb.configurablelexer.token.simple.Pos;
-import lt.lb.configurablelexer.token.simple.SimplePosToken;
 
 /**
  *
@@ -38,12 +25,6 @@ import lt.lb.configurablelexer.token.simple.SimplePosToken;
 public class MAIN2 {
 
     public static void main(String[] args) throws Exception {
-        DLog main = DLog.main();
-        main.async = false;
-        main.stackTrace = false;
-        main.surroundString = false;
-        main.threadName = false;
-        DLog.useTimeFormat(main, "HH:mm:ss.SSS ");
         Pattern compile = Pattern.compile("\\d+\\.\\d+");
         String input = "labas 1+1.10\n"
                 + "int i = 10++;\n"
@@ -59,7 +40,7 @@ public class MAIN2 {
         };
         ConfCharPredicate tokenPred = new ConfCharPredicate();
         tokenPred.disallowWhen(Character::isWhitespace);
-        
+
         callbacks.setTokenCharPredicate(tokenPred);
 
         LineAwareCharListener lineListener = new LineAwareCharListener();
@@ -69,7 +50,6 @@ public class MAIN2 {
         SimpleLexer lexer = new SimpleLexer(tokenizer) {
             @Override
             public BaseStringToken<Pos> makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String str) throws Exception {
-//                DLog.print(str);
                 Pos pos = new Pos(lineListener.getLine() + 1, from + lineListener.getColumn() - str.length());
                 String val = str.substring(from, to);
                 if (matcher.matcher instanceof KeywordMatcher) {
@@ -92,7 +72,6 @@ public class MAIN2 {
 
             @Override
             public BaseStringToken<Pos> makeLiteral(int from, int to, String str) throws Exception {
-//                DLog.print("Literal", str);
                 Pos pos = new Pos(lineListener.getLine() + 1, from + lineListener.getColumn() - str.length());
 
                 LiteralToken<Pos> literalToken = new LiteralToken<>();
@@ -113,10 +92,12 @@ public class MAIN2 {
 
         ConfTokenizer myTokenizer = lexer;
         myTokenizer.reset(input);
+        StringBuilder sb = new StringBuilder();
         myTokenizer.produceItems(t -> {
-            DLog.print(t);
+           sb.append(t).append("\n");
         });
+        
+        System.out.println(sb);
 
-        DLog.close();
     }
 }

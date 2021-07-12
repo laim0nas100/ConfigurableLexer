@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import lt.lb.commons.DLog;
 import lt.lb.configurablelexer.lexer.SimpleLexer;
 import lt.lb.configurablelexer.lexer.matchers.FloatMatcher;
 import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
@@ -35,19 +34,13 @@ import lt.lb.configurablelexer.utils.BufferedIterator.SimplifiedBufferedIterator
 public class MAINText06 {
 
     public static void main(String[] args) throws Exception {
-        DLog main = DLog.main();
-        main.async = true;
-        main.stackTrace = false;
-        main.surroundString = true;
-        main.threadName = false;
-        DLog.useTimeFormat(main, "HH:mm:ss.SSS ");
         Reader input = new FileReader(new File("parse_text.txt"), StandardCharsets.UTF_8);
 
         DefaultConfTokenizer<ConfToken> tokenizer = new DefaultConfTokenizer();
 
         LineAwareCharListener lineListener = new LineAwareCharListener();
 
-        tokenizer.getCallbacks()
+        tokenizer.getConfCallbacks()
                 .setTokenCharPredicate(
                         new ConfCharPredicate().disallowWhen(Character::isWhitespace)
                 )
@@ -83,8 +76,8 @@ public class MAINText06 {
             }
         };
 
-        tokenizer.getCallbacks().nest(t -> lexer);
-        tokenizer.getCallbacks().nest(t -> {
+        tokenizer.getConfCallbacks().nest(t -> lexer);
+        tokenizer.getConfCallbacks().nest(t -> {
             return new PosAwareDefaultCallback<ConfToken, Pos>(t, lineListener::getPos) {
                 @Override
                 public ConfToken construct(ExtendedPositionAwareSplittableCallback cb, Pos start, Pos end, char[] buffer, int offset, int length) throws Exception {
@@ -105,8 +98,7 @@ public class MAINText06 {
                     .ignoringOnlyComments(false);
         });
 
-        tokenizer.getCallbacks().addListener((info, c) -> {
-//            DLog.print(info,Character.toString(c));
+        tokenizer.getConfCallbacks().addListener((info, c) -> {
         });
 
         lexer.addMatcher(new KeywordMatcher("labas"));
@@ -122,17 +114,12 @@ public class MAINText06 {
         myTokenizer.reset(input);
         SimplifiedBufferedIterator<ConfToken> iterator = myTokenizer.toSimplifiedIterator();
 
-//        for(ConfToken t:iterator){
-//            DLog.print(t);
-//        }
-//        while(iterator.hasNext()){
-//            DLog.print(iterator.next());
-//        }
+        StringBuilder sb = new StringBuilder();
         myTokenizer.produceItems(t -> {
-            DLog.print(t);
+            sb.append(t).append("\n");
         });
+        System.out.println(sb);
         input.close();
 
-        DLog.close();
     }
 }

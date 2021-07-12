@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.util.regex.Pattern;
-import lt.lb.commons.DLog;
 import lt.lb.configurablelexer.lexer.SimpleLexer;
 import lt.lb.configurablelexer.lexer.matchers.FloatMatcher;
 import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
@@ -35,12 +33,6 @@ import lt.lb.configurablelexer.token.spec.comment.MultilineCommentAwareCallback;
 public class MAINText04 {
 
     public static void main(String[] args) throws Exception {
-        DLog main = DLog.main();
-        main.async = false;
-        main.stackTrace = false;
-        main.surroundString = false;
-        main.threadName = false;
-        DLog.useTimeFormat(main, "HH:mm:ss.SSS ");
         Reader input = new FileReader(new File("parse_text.txt"), StandardCharsets.UTF_8);
 
         ConfTokenizerCallbacks callbacks = new ConfTokenizerCallbacks<>().setTokenCharPredicate(
@@ -120,7 +112,7 @@ public class MAINText04 {
         multiLineCommentCallback.setCommentStart("/*");
         multiLineCommentCallback.setCommentEnd("*/");
 
-        callbacks.nest(t->multiLineCommentCallback);
+        callbacks.nest(t -> multiLineCommentCallback);
 
         BaseTokenizer tokenizer_with_comments = new BaseTokenizer() {
 
@@ -171,11 +163,12 @@ public class MAINText04 {
 
         ConfTokenizer myTokenizer = lexer;
         myTokenizer.reset(input);
+        StringBuilder sb = new StringBuilder();
         myTokenizer.produceItems(t -> {
-            DLog.print(t);
+            sb.append(t).append("\n");
         });
+        System.out.println(sb);
         input.close();
 
-        DLog.close();
     }
 }

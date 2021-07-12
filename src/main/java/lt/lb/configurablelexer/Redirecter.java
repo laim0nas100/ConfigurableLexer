@@ -21,7 +21,7 @@ public class Redirecter<WAY> {
 
     protected final WAY first;
     protected final WAY second;
-    protected boolean nested;
+    protected boolean nested = false;
 
     public Redirecter(WAY first, WAY second) {
         this.first = Objects.requireNonNull(first);
