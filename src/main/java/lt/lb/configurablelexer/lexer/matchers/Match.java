@@ -41,18 +41,20 @@ public interface Match extends Id {
                         PartialMatch p1 = (PartialMatch) m1;
                         int c = Integer.compare(p0.from, p1.from);
                         if (c == 0) { // same starting index, prefer bigger size then
-                            return Integer.compare(p1.size(), p0.size());
+                            c = Integer.compare(p1.size(), p0.size());
+                            if (c != 0) {
+                                return c;
+                            }//else try to compare breaking
                         } else {
                             return c;
                         }
 
+                    }
+                    // best we can do is compare breaking.
+                    if (m0.isBreaking()) {
+                        return m1.isBreaking() ? 0 : -1;
                     } else {
-                        //unknown type, best we can do is compare breaking.
-                        if (m0.isBreaking()) {
-                            return m1.isBreaking() ? 0 : -1;
-                        } else {
-                            return m1.isBreaking() ? 1 : 0;
-                        }
+                        return m1.isBreaking() ? 1 : 0;
                     }
 
                 }

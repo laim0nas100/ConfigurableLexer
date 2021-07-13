@@ -84,82 +84,6 @@ public class DefaultMatchedTokenProducer<T extends ConfToken> extends BufferedIt
 
     }
 
-    public static <T extends ConfToken> List<MatchedTokens<T>> tryMatch(Iterator<T> lexer, Collection<TokenMatcher<T>> matchersCol) throws MatchedTokenProducerException {
-
-        List<TokenMatcher<T>> matchers = matchersCol.stream()
-                .filter(p -> p.length() > 0)
-                .sorted(cmpMatchers).collect(Collectors.toList());
-
-        RefillableBuffer<T> refillable = new RefillableBuffer<>(lexer);
-        ArrayList<MatchedTokens<T>> matched = new ArrayList<>();
-
-        while (refillable.hasNext()) {
-            ArrayList<T> liveList = new ArrayList<>();
-            LinkedList<TokenMatcher<T>> toCheck = new LinkedList<>(matchers);
-            HashMap<Integer, List<TokenMatcher>> finalized = new HashMap<>();
-            boolean doMore = true;
-            while (doMore && refillable.hasNext()) {
-                liveList.add(refillable.next());
-                int size = liveList.size();
-                int localPos = size - 1;
-                ConfToken token = liveList.get(localPos);
-                Iterator<TokenMatcher<T>> iterator = toCheck.iterator();
-                while (iterator.hasNext()) {
-                    TokenMatcher m = iterator.next();
-
-                    boolean rep = m.isRepeading();
-                    int len = m.length();
-                    boolean sizeOk = rep ? true : len >= size;
-                    int pos = rep ? localPos % len : localPos;
-                    boolean typeOk = m.requiredType(pos).isInstance(token);
-                    boolean matches = m.matches(pos, token);
-                    if (sizeOk && typeOk && matches) {
-
-                        if (!rep && len == size) {
-                            finalized.computeIfAbsent(size, c -> new ArrayList<>()).add(m);
-                        } else if (rep && size % len == 0) {
-                            finalized.computeIfAbsent(size, c -> new ArrayList<>()).add(m);
-                        }
-
-                    } else {
-                        iterator.remove();
-                    }
-
-                }
-                doMore = !toCheck.isEmpty();
-
-            }
-
-            if (finalized.isEmpty()) {
-                String err = liveList + "";
-                if (liveList.isEmpty() && !liveList.isEmpty()) {
-                    err = liveList.toString();
-                }
-                throw new MatchedTokenProducerException("Failed to match any matchers, for token " + err);
-            }
-
-            Map.Entry<Integer, List<TokenMatcher>> get = finalized.entrySet().stream()
-                    .sorted(compEntry).findFirst().get();
-            List<TokenMatcher> maxMatched = get.getValue();
-
-            ArrayList<ConfToken> tokens = new ArrayList<>(get.getKey());
-
-            int s = get.getKey();
-            for (int i = 0; i < s; i++) {
-                tokens.add(liveList.get(i));
-            }
-            for (int i = liveList.size() - 1; i >= s; i--) {
-                refillable.returnItem(liveList.get(i));
-            }
-            liveList.clear();
-            matched.add(new MatchedTokens(maxMatched, tokens));
-
-        }
-
-        return matched;
-
-    }
-
     public static <T extends ConfToken> Optional<MatchedTokens<T>> findBestMatch(RefillableBuffer<T> refillable, Collection<TokenMatcher<T>> matchers) throws MatchedTokenProducerException {
 
         while (refillable.hasNext()) {
@@ -169,21 +93,24 @@ public class DefaultMatchedTokenProducer<T extends ConfToken> extends BufferedIt
             boolean doMore = true;
             while (doMore && refillable.hasNext()) {
                 liveList.add(refillable.next());
-                int size = liveList.size();
-                int localPos = size - 1;
+                final int size = liveList.size();
+                final int localPos = size - 1;
                 ConfToken token = liveList.get(localPos);
                 Iterator<TokenMatcher<T>> iterator = toCheck.iterator();
                 while (iterator.hasNext()) {
                     TokenMatcher m = iterator.next();
-
                     boolean rep = m.isRepeading();
                     int len = m.length();
                     boolean sizeOk = rep ? true : len >= size;
                     int pos = rep ? localPos % len : localPos;
-                    boolean typeOk = sizeOk && m.requiredType(pos).isInstance(token);
-                    boolean matches = typeOk && m.matches(pos, token);
-                    if (matches) {
+                    boolean matches = false;
+                    if (sizeOk) {
+                        Class requiredType = m.requiredType(pos);
+                        boolean typeOk = requiredType.isInstance(token);
+                        matches = typeOk && m.matches(pos, token);
+                    }
 
+                    if (matches) {
                         if (!rep && len == size) {
                             finalized.computeIfAbsent(size, c -> new ArrayList<>()).add(m);
                         } else if (rep && size % len == 0) {

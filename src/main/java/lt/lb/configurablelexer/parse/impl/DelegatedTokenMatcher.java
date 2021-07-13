@@ -51,11 +51,6 @@ public class DelegatedTokenMatcher<T extends ConfToken> implements TokenMatcher<
     }
 
     @Override
-    public TokenMatcher named(String newName) {
-        return delegate.named(newName);
-    }
-
-    @Override
     public String toString() {
         return delegate.toString();
     }

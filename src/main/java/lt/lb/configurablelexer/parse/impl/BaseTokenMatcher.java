@@ -36,8 +36,13 @@ public abstract class BaseTokenMatcher<T extends ConfToken> implements TokenMatc
     }
 
     @Override
+    public String stringValues() {
+        return "name=" + name() + ", length=" + length();
+    }
+
+    @Override
     public String toString() {
-        return getClass().getSimpleName() + " " + name() + " " + length();
+        return descriptiveString();
     }
 
     public static <T> T[] assertArray(T... array) {

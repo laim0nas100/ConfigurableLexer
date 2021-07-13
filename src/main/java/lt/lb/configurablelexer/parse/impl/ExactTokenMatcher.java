@@ -25,4 +25,9 @@ public class ExactTokenMatcher<T extends ConfToken> extends BaseTokenMatcher<T> 
         return ignoreCase ? StringUtils.equalsIgnoreCase(word, tVal) : StringUtils.equals(word, tVal);
     }
 
+    @Override
+    public String stringValues() {
+        return "ignoreCase=" + ignoreCase + ", word=" + word;
+    }
+
 }

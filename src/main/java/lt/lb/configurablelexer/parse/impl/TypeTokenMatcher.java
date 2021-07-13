@@ -30,7 +30,11 @@ public class TypeTokenMatcher<T extends ConfToken> extends BaseTokenMatcher<T> {
     @Override
     public boolean matches(int position, T token) {
         return exact ? type.equals(token.getClass()) : type.isInstance(token);
+    }
 
+    @Override
+    public String stringValues() {
+        return super.stringValues() + " type=" + type.getSimpleName() + " exact=" + exact;
     }
 
 }
