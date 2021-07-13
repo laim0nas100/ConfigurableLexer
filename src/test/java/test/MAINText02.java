@@ -1,15 +1,12 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package test;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
+import lt.lb.configurablelexer.Redirecter;
 import lt.lb.configurablelexer.lexer.SimpleLexer;
 import lt.lb.configurablelexer.lexer.matchers.FloatMatcher;
 import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
@@ -37,8 +34,8 @@ import lt.lb.configurablelexer.token.spec.comment.LineCommentAwareCallback;
 public class MAINText02 {
 
     public static void main(String[] args) throws Exception {
-        Pattern compile = Pattern.compile("\\d+\\.\\d+");
-        Reader input = new FileReader(new File("parse_text.txt"), StandardCharsets.UTF_8);
+        URL resource = Redirecter.class.getResource("/parse_text.txt");
+        Reader input = new FileReader(resource.getFile(), StandardCharsets.UTF_8);
 
         ConfTokenizerCallbacks callbacks = new ConfTokenizerCallbacks<>();
         ConfCharPredicate tokenPred = new ConfCharPredicate();

@@ -3,9 +3,12 @@ package test;
 import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
+import java.io.StringReader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.regex.Pattern;
+import lt.lb.configurablelexer.Redirecter;
 import lt.lb.configurablelexer.lexer.SimpleLexer;
 import lt.lb.configurablelexer.lexer.matchers.FloatMatcher;
 import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
@@ -96,7 +99,9 @@ public class MAINParse01 {
     }
 
     public static void main(String[] args) throws Exception {
-        Reader input = new FileReader(new File("parse_text_expression.txt"), StandardCharsets.UTF_8);
+
+        URL resource = Redirecter.class.getResource("/parse_text_expression.txt");
+        Reader input = new FileReader(resource.getFile(), StandardCharsets.UTF_8);
 
         DefaultConfTokenizer<ConfToken> tokenizer = new DefaultConfTokenizer();
 
@@ -179,38 +184,50 @@ public class MAINParse01 {
         lexer.addMatcher(new KeywordMatcher(";", true));
         lexer.addMatcher(new KeywordMatcher("int", false));
         lexer.addMatcher(new KeywordMatcher("float", false));
+        lexer.addMatcher(new KeywordMatcher("[", true));
+        lexer.addMatcher(new KeywordMatcher("]", true));
+        lexer.addMatcher(new KeywordMatcher(",", true));
 
         ConfTokenizer myTokenizer = tokenizer;
         myTokenizer.reset(input);
 
-        TokenMatcher<ConfToken> any = TokenMatchers.any(1);
-        TokenMatcher<ConfToken> number = TokenMatchers.ofType(NumberToken.class);
-        TokenMatcher<ConfToken> op = TokenMatchers.ofType(OperatorToken.class);
-        TokenMatcher<ConfToken> type = TokenMatchers.or(TokenMatchers.exact("int"), TokenMatchers.exact("float"));
-        TokenMatcher<ConfToken> identifier = TokenMatchers.ofType(IdentifierToken.class);
-        TokenMatcher<ConfToken> eq = TokenMatchers.exact("=");
+        TokenMatcher any = TokenMatchers.any(1).importance(-1); // will appear at the end of matched list. Default importance is 0
+        TokenMatcher number = TokenMatchers.ofType(NumberToken.class);
+        TokenMatcher op = TokenMatchers.ofType(OperatorToken.class);
+        TokenMatcher type = TokenMatchers.or(TokenMatchers.exact("int"), TokenMatchers.exact("float"));
+        TokenMatcher identifier = TokenMatchers.ofType(IdentifierToken.class);
+        TokenMatcher eq = TokenMatchers.exact("=");
+        TokenMatcher variable = number.orWith(identifier).named("var");
 
-        TokenMatcher<ConfToken> exprStart = TokenMatchers.concat(number, op).repeating(true).named("exp start");
-        TokenMatcher<ConfToken> expMid = TokenMatchers.concat(number, op, number).repeating(true).named("exp");
-        TokenMatcher<ConfToken> expEnd = TokenMatchers.concat(op, number).repeating(true).named("exp end");
+        TokenMatcher exprStart = TokenMatchers.concat(variable, op).named("exp start");
+        TokenMatcher expMid = TokenMatchers.concat(variable, op, number).named("exp");
+        TokenMatcher expEnd = TokenMatchers.concat(op, variable).named("exp end");
+        TokenMatcher end = TokenMatchers.concat(op, variable, TokenMatchers.exact(";")).named("end");
 
-        TokenMatcher<ConfToken> assignment = TokenMatchers.concat(type, identifier, eq).named("Assignment");
+        TokenMatcher arrayStart = TokenMatchers.concat(TokenMatchers.exact("[")).named("array start");
+        TokenMatcher arrayStart1 = TokenMatchers.concat(TokenMatchers.exact("["), variable).named("array start 1");
+        TokenMatcher arrayCont = TokenMatchers.concat(TokenMatchers.exact(","), variable).named("arrayCont").repeating(true);
+
+        TokenMatcher arrayEnd = TokenMatchers.concat(TokenMatchers.exact("]")).named("array end");
+
+        TokenMatcher assignment = TokenMatchers.concat(type, identifier, eq).named("Assignment");
+
+        TokenMatcher identiefierSequence = identifier.repeating(true).named("Identifier seq");
 
         myTokenizer.reset(input);
 
-        DefaultMatchedTokenProducer defaultMatchedTokenProducer = new DefaultMatchedTokenProducer<>(myTokenizer, Arrays.asList(assignment, exprStart, expMid, expEnd, any));
+        DefaultMatchedTokenProducer defaultMatchedTokenProducer = new DefaultMatchedTokenProducer<>(myTokenizer, 
+                Arrays.asList(identiefierSequence, assignment, exprStart, expMid, expEnd, end, any, arrayStart, arrayStart1, arrayCont, arrayEnd)
+        );
 
-        
-         StringBuilder sb = new StringBuilder();
-        //TODO fails to match this thing.. for some reason
-       
+        StringBuilder sb = new StringBuilder();
+
         defaultMatchedTokenProducer.toSimplifiedIterator().forEach(m -> {
             sb.append(m).append("\n");
         });
-         System.out.println(sb);
+        System.out.println(sb);
 
         input.close();
-
 
     }
 }

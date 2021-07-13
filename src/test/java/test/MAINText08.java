@@ -3,7 +3,9 @@ package test;
 import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import lt.lb.configurablelexer.Redirecter;
 import lt.lb.configurablelexer.lexer.SimpleLexer;
 import lt.lb.configurablelexer.lexer.matchers.FloatMatcher;
 import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
@@ -34,8 +36,8 @@ import lt.lb.configurablelexer.utils.BufferedIterator.SimplifiedBufferedIterator
 public class MAINText08 {
 
     public static void main(String[] args) throws Exception {
-        Reader input = new FileReader(new File("parse_text_nested_comments.txt"), StandardCharsets.UTF_8);
-
+        URL resource = Redirecter.class.getResource("/parse_text_nested_comments.txt");
+        Reader input = new FileReader(resource.getFile(), StandardCharsets.UTF_8);
         DefaultConfTokenizer<ConfToken> tokenizer = new DefaultConfTokenizer();
 
         LineAwareCharListener lineListener = new LineAwareCharListener();
