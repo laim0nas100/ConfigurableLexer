@@ -1,11 +1,14 @@
 package test;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 import lt.lb.configurablelexer.Redirecter;
@@ -101,7 +104,8 @@ public class MAINParse01 {
     public static void main(String[] args) throws Exception {
 
         URL resource = Redirecter.class.getResource("/parse_text_expression.txt");
-        Reader input = new FileReader(resource.getFile(), StandardCharsets.UTF_8);
+
+        BufferedReader input = Files.newBufferedReader(Paths.get(resource.toURI()), StandardCharsets.UTF_8);
 
         DefaultConfTokenizer<ConfToken> tokenizer = new DefaultConfTokenizer();
 
@@ -216,7 +220,7 @@ public class MAINParse01 {
 
         myTokenizer.reset(input);
 
-        DefaultMatchedTokenProducer defaultMatchedTokenProducer = new DefaultMatchedTokenProducer<>(myTokenizer, 
+        DefaultMatchedTokenProducer defaultMatchedTokenProducer = new DefaultMatchedTokenProducer<>(myTokenizer,
                 Arrays.asList(identiefierSequence, assignment, exprStart, expMid, expEnd, end, any, arrayStart, arrayStart1, arrayCont, arrayEnd)
         );
 
