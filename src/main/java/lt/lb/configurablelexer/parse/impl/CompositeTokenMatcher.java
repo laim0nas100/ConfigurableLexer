@@ -1,5 +1,6 @@
 package lt.lb.configurablelexer.parse.impl;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.stream.Stream;
 import lt.lb.configurablelexer.parse.TokenMatcher;
@@ -11,10 +12,20 @@ import lt.lb.configurablelexer.token.ConfToken;
  */
 public abstract class CompositeTokenMatcher<T extends ConfToken> extends BaseTokenMatcher<T> {
 
+    /**
+     * Broader class comes first.
+     *
+     * (Number,Double) -> -1
+     *
+     * (Double,Object) -> 1
+     *
+     * (Float,Double) -> 0
+     *
+     */
     public static final Comparator<Class> typeComparator = new Comparator<Class>() {
         @Override
         public int compare(Class o1, Class o2) {
-            if (o1 == null && o2 == null) {
+            if (o1 == o2) {
                 return 0;
             }
 
@@ -81,6 +92,11 @@ public abstract class CompositeTokenMatcher<T extends ConfToken> extends BaseTok
             }
         }
         return expectedLength;
+    }
+
+    @Override
+    public String stringValues() {
+        return super.stringValues() + " matchers=" + Arrays.asList(matchers);
     }
 
 }

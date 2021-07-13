@@ -9,20 +9,20 @@ import lt.lb.configurablelexer.token.ConfToken;
  */
 public class ConjuctionTokenMatcher<T extends ConfToken> extends CompositeTokenMatcher<T> {
 
-    protected Class<? extends ConfToken>[] maxTypes;
+    protected Class<? extends ConfToken>[] narrowTypes;
 
     public ConjuctionTokenMatcher(String name, TokenMatcher... matchers) {
         super(assertSameLength(matchers), name, matchers);
 
-        maxTypes = new Class[length];
+        narrowTypes = new Class[length];
         if (length > 0) {
             for (int pos = 0; pos < length; pos++) {
-                maxTypes[pos] = matchers[0].requiredType(pos);
+                narrowTypes[pos] = matchers[0].requiredType(pos);
 
                 for (int i = 1; i < matchers.length; i++) {
-                    Class<? extends ConfToken> candidate = matchers[i].requiredType(pos);
-                    if (typeComparator.compare(maxTypes[pos], candidate) > 0) {
-                        maxTypes[pos] = candidate;
+                    Class<? extends ConfToken> maybeNarrow = matchers[i].requiredType(pos);
+                    if (typeComparator.compare(narrowTypes[pos], maybeNarrow) < 0) {
+                        narrowTypes[pos] = maybeNarrow;
                     }
 
                 }
@@ -34,7 +34,7 @@ public class ConjuctionTokenMatcher<T extends ConfToken> extends CompositeTokenM
 
     @Override
     public Class<? extends ConfToken> requiredType(int position) {
-        return maxTypes[position];
+        return narrowTypes[position];
     }
 
     @Override
