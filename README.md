@@ -16,8 +16,8 @@ Every part of this is streamed.
 - Break down break-able tokens. For example "10+10" could be interpreted as 1 literal or 3 separate tokens, if '+' symbol is assigned 'break' property.
 ### Using char listeners:
 - Comment parser (with ability to ignore them)
---Line
---Multiline (with optional nesting)
+- Line comments
+- Multiline comment (with optional nesting)
 - String parser
 - Position tracker
 
