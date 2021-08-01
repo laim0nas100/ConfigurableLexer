@@ -90,7 +90,7 @@ public class MAIN2 {
         lexer.addMatcher(new KeywordMatcher("+", true));
         lexer.addMatcher(new KeywordMatcher("++", true));
 
-        ConfTokenizer myTokenizer = lexer;
+        ConfTokenizer myTokenizer = tokenizer;
         myTokenizer.reset(input);
         StringBuilder sb = new StringBuilder();
         myTokenizer.produceItems(t -> {

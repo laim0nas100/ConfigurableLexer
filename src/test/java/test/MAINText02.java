@@ -15,6 +15,7 @@ import lt.lb.configurablelexer.lexer.matchers.FloatMatcher;
 import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
 import lt.lb.configurablelexer.lexer.matchers.StringMatcher;
 import lt.lb.configurablelexer.lexer.matchers.KeywordMatcher;
+import lt.lb.configurablelexer.lexer.matchers.RegexMatcher;
 import lt.lb.configurablelexer.token.base.KeywordToken;
 import lt.lb.configurablelexer.token.base.BaseStringToken;
 import lt.lb.configurablelexer.token.BaseTokenizer;
@@ -27,6 +28,7 @@ import lt.lb.configurablelexer.token.TokenizerCallbacks;
 import lt.lb.configurablelexer.token.base.CommentToken;
 import lt.lb.configurablelexer.token.base.LiteralToken;
 import lt.lb.configurablelexer.token.base.NumberToken;
+import lt.lb.configurablelexer.token.base.ProcessedToken;
 import lt.lb.configurablelexer.token.simple.Pos;
 import lt.lb.configurablelexer.token.spec.comment.LineCommentAwareCallback;
 
@@ -122,7 +124,7 @@ public class MAINText02 {
         lexer.addMatcher(new KeywordMatcher("++", true));
         lexer.addMatcher(new KeywordMatcher(";", true));
 
-        ConfTokenizer myTokenizer = lexer;
+        ConfTokenizer myTokenizer = tokenizer_with_comments;
         myTokenizer.reset(input);
         StringBuilder sb = new StringBuilder();
         myTokenizer.produceItems(t -> {

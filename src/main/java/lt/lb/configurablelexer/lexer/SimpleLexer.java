@@ -10,18 +10,20 @@ import lt.lb.configurablelexer.lexer.matchers.StringMatcher.MatcherMatch;
 import lt.lb.configurablelexer.token.ConfToken;
 import lt.lb.configurablelexer.token.ConfTokenBuffer;
 import lt.lb.configurablelexer.token.ConfTokenizer;
+import lt.lb.configurablelexer.token.DelegatingTokenizerCallbacks;
+import lt.lb.configurablelexer.token.TokenizerCallbacks;
 
 /**
  *
  * @author laim0nas100
  * @param <T>
  */
-public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T> {
+public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T> , DelegatingTokenizerCallbacks<T> {
 
-    protected ConfTokenizer<T> tokenizer;
+    protected TokenizerCallbacks<T> tokenizer;
     protected List<StringMatcher> matchers = new ArrayList<>();
 
-    public SimpleLexer(ConfTokenizer<T> tokenizer) {
+    public SimpleLexer(TokenizerCallbacks<T> tokenizer) {
         this.tokenizer = Objects.requireNonNull(tokenizer);
     }
 
@@ -142,7 +144,7 @@ public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T> {
     public abstract T makeLiteral(int from, int to, String unbrokenString) throws Exception;
 
     @Override
-    public ConfTokenizer<T> delegate() {
+    public TokenizerCallbacks<T> delegate() {
         return tokenizer;
     }
 

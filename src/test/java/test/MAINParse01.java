@@ -117,7 +117,7 @@ public class MAINParse01 {
                 )
                 .addListener(lineListener);
 
-        SimpleLexer lexer = tokenizer.nest(t -> new SimpleLexer<ConfToken>(t) {
+        SimpleLexer lexer = tokenizer.getConfCallbacks().nest(t -> new SimpleLexer<ConfToken>(t) {
             @Override
             public BaseStringToken<Pos> makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String str) throws Exception {
                 Pos pos = lineListener.getPos(from, str.length());

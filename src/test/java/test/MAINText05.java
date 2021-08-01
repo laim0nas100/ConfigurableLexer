@@ -122,7 +122,7 @@ public class MAINText05 {
         lexer.addMatcher(new KeywordMatcher("++", true));
         lexer.addMatcher(new KeywordMatcher(";", true));
 
-        ConfTokenizer myTokenizer = lexer;
+        ConfTokenizer myTokenizer = tokenizer_with_comments;
         myTokenizer.reset(input);
         StringBuilder sb = new StringBuilder();
         myTokenizer.produceItems(t -> {
