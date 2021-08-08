@@ -65,9 +65,9 @@ public class DisjunctionTokenMatcher<T extends ConfToken> extends CompositeToken
     }
     
     @Override
-    public boolean isRepeading() {
+    public boolean isRepeating() {
         for (TokenMatcher matcher : matchers) {
-            if (matcher.isRepeading()) {
+            if (matcher.isRepeating()) {
                 return true;
             }
         }

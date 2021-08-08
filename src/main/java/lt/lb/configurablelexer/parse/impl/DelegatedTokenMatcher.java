@@ -26,18 +26,18 @@ public class DelegatedTokenMatcher<T extends ConfToken> implements TokenMatcher<
     }
 
     @Override
-    public int length() {
-        return delegate.length();
+    public int getLength() {
+        return delegate.getLength();
     }
 
     @Override
-    public int importance() {
-        return delegate.importance();
+    public int getImportance() {
+        return delegate.getImportance();
     }
 
     @Override
-    public boolean isRepeading() {
-        return delegate.isRepeading();
+    public boolean isRepeating() {
+        return delegate.isRepeating();
     }
 
     @Override

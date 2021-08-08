@@ -17,7 +17,7 @@ public class ConcatTokenMatcher<T extends ConfToken> extends CompositeTokenMatch
     public boolean matches(int position, ConfToken token) {
         int i = 0;
         for (TokenMatcher m : matchers) {
-            int len = m.length();
+            int len = m.getLength();
             if (position >= len) {
                 position -= len;
                 i++;
@@ -33,7 +33,7 @@ public class ConcatTokenMatcher<T extends ConfToken> extends CompositeTokenMatch
     public Class<? extends ConfToken> requiredType(int position) {
         int i = 0;
         for (TokenMatcher m : matchers) {
-            int len = m.length();
+            int len = m.getLength();
             if (position >= len) {
                 position -= len;
                 i++;

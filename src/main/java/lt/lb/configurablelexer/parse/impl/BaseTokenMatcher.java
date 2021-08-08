@@ -26,7 +26,7 @@ public abstract class BaseTokenMatcher<T extends ConfToken> implements TokenMatc
     }
 
     @Override
-    public int length() {
+    public int getLength() {
         return length;
     }
 
@@ -37,7 +37,7 @@ public abstract class BaseTokenMatcher<T extends ConfToken> implements TokenMatc
 
     @Override
     public String stringValues() {
-        return "name=" + name() + ", length=" + length();
+        return "name=" + name() + ", length=" + getLength();
     }
 
     @Override

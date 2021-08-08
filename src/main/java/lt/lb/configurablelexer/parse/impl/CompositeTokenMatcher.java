@@ -79,14 +79,14 @@ public abstract class CompositeTokenMatcher<T extends ConfToken> extends BaseTok
     }
 
     public static int sumLength(TokenMatcher... matchers) {
-        return Stream.of(matchers).mapToInt(m -> m.length()).sum();
+        return Stream.of(matchers).mapToInt(m -> m.getLength()).sum();
     }
 
     public static int assertSameLength(TokenMatcher... matchers) {
-        final int expectedLength = matchers[0].length();
+        final int expectedLength = matchers[0].getLength();
 
         for (int i = 1; i < matchers.length; i++) {
-            int length = matchers[i].length();
+            int length = matchers[i].getLength();
             if (expectedLength != length) {
                 throw new IllegalArgumentException("Length mismatch. Expected " + expectedLength + " but found:" + length + " at " + matchers[i].name());
             }

@@ -17,7 +17,7 @@ public class RepeatableTokenMatcher<T extends ConfToken> extends DelegatedTokenM
     }
 
     @Override
-    public boolean isRepeading() {
+    public boolean isRepeating() {
         return rep;
     }
 

@@ -1,8 +1,7 @@
 package lt.lb.configurablelexer.parse;
 
-import java.util.Arrays;
-import java.util.function.Predicate;
 import lt.lb.configurablelexer.Id;
+import lt.lb.configurablelexer.anymatch.PosMatch;
 import lt.lb.configurablelexer.parse.impl.ConjuctionTokenMatcher;
 import lt.lb.configurablelexer.parse.impl.DisjunctionTokenMatcher;
 import lt.lb.configurablelexer.parse.impl.ImportanceTokenMatcher;
@@ -14,7 +13,8 @@ import lt.lb.configurablelexer.token.ConfToken;
  *
  * @author laim0nas100
  */
-public interface TokenMatcher<T extends ConfToken> extends Predicate<T>, Id {
+@Deprecated
+public interface TokenMatcher<T extends ConfToken> extends PosMatch<T, String>, Id {
 
     /**
      * How to recognize what has matched
@@ -23,12 +23,18 @@ public interface TokenMatcher<T extends ConfToken> extends Predicate<T>, Id {
      */
     public String name();
 
+    @Override
+    public default String getName() {
+        return name();
+    }
+
     /**
      * How many tokens are required. 0 or below means it is never used.
      *
      * @return
      */
-    public default int length() {
+    @Override
+    public default int getLength() {
         return 1;
     }
 
@@ -37,7 +43,8 @@ public interface TokenMatcher<T extends ConfToken> extends Predicate<T>, Id {
      *
      * @return
      */
-    public default boolean isRepeading() {
+    @Override
+    public default boolean isRepeating() {
         return false;
     }
 
@@ -46,7 +53,8 @@ public interface TokenMatcher<T extends ConfToken> extends Predicate<T>, Id {
      *
      * @return
      */
-    public default int importance() {
+    @Override
+    public default int getImportance() {
         return 0;
     }
 
@@ -60,25 +68,6 @@ public interface TokenMatcher<T extends ConfToken> extends Predicate<T>, Id {
         return ConfToken.class;
     }
 
-    @Override
-    public default boolean test(T t) {
-        for (int i = 0; i < this.length(); i++) {
-            if (matches(i, t)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * If given token can be at given position
-     *
-     * @param position should be within length (negative)
-     * @param token
-     * @return
-     */
-    public boolean matches(int position, T token);
-
     public default TokenMatcher named(String newName) {
         return new NamedTokenMatcher(newName, this);
     }
@@ -86,7 +75,7 @@ public interface TokenMatcher<T extends ConfToken> extends Predicate<T>, Id {
     public default TokenMatcher orWith(TokenMatcher or) {
         return new DisjunctionTokenMatcher("Or", this, or);
     }
-    
+
     public default TokenMatcher andWith(TokenMatcher and) {
         return new ConjuctionTokenMatcher("And", this, and);
     }

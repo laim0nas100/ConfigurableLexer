@@ -48,9 +48,9 @@ public class ConjuctionTokenMatcher<T extends ConfToken> extends CompositeTokenM
     }
 
     @Override
-    public boolean isRepeading() {
+    public boolean isRepeating() {
         for (TokenMatcher matcher : matchers) {
-            if (!matcher.isRepeading()) {
+            if (!matcher.isRepeating()) {
                 return false;
             }
         }

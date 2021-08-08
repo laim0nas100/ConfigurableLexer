@@ -16,7 +16,7 @@ public class ImportanceTokenMatcher extends DelegatedTokenMatcher {
     }
 
     @Override
-    public int importance() {
+    public int getImportance() {
         return importance;
     }
 

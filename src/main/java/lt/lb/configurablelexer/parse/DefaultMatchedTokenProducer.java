@@ -33,14 +33,14 @@ public class DefaultMatchedTokenProducer<T extends ConfToken> extends BufferedIt
     static final Comparator<TokenMatcher> compLength = new Comparator<TokenMatcher>() {
         @Override
         public int compare(TokenMatcher o1, TokenMatcher o2) {
-            return Integer.compare(o1.length(), o2.length());
+            return Integer.compare(o1.getLength(), o2.getLength());
         }
     }.reversed();
 
     static final Comparator<TokenMatcher> compImportance = new Comparator<TokenMatcher>() {
         @Override
         public int compare(TokenMatcher o1, TokenMatcher o2) {
-            return Integer.compare(o1.importance(), o2.importance());
+            return Integer.compare(o1.getImportance(), o2.getImportance());
         }
     }.reversed();
 
@@ -56,7 +56,7 @@ public class DefaultMatchedTokenProducer<T extends ConfToken> extends BufferedIt
         this.refillable = new RefillableBuffer<>(tokenizer.toSimplifiedIterator().iterator());
 
         this.matchers = matchers.stream()
-                .filter(p -> p.length() > 0)
+                .filter(p -> p.getLength() > 0)
                 .sorted(cmpMatchers)
                 .collect(Collectors.toList());
     }
@@ -69,7 +69,7 @@ public class DefaultMatchedTokenProducer<T extends ConfToken> extends BufferedIt
     public static <T extends ConfToken> List<MatchedTokens<T>> tryMatchAll(Iterator<T> lexer, Collection<TokenMatcher<T>> matchersCol) throws MatchedTokenProducerException {
 
         List<TokenMatcher<T>> matchers = matchersCol.stream()
-                .filter(p -> p.length() > 0)
+                .filter(p -> p.getLength() > 0)
                 .sorted(cmpMatchers).collect(Collectors.toList());
 
         RefillableBuffer<T> refillable = new RefillableBuffer<>(lexer);
@@ -99,8 +99,8 @@ public class DefaultMatchedTokenProducer<T extends ConfToken> extends BufferedIt
                 Iterator<TokenMatcher<T>> iterator = toCheck.iterator();
                 while (iterator.hasNext()) {
                     TokenMatcher m = iterator.next();
-                    boolean rep = m.isRepeading();
-                    int len = m.length();
+                    boolean rep = m.isRepeating();
+                    int len = m.getLength();
                     boolean sizeOk = rep ? true : len >= size;
                     int pos = rep ? localPos % len : localPos;
                     boolean matches = false;

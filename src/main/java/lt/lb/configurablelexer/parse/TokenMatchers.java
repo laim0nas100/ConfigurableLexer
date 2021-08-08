@@ -16,6 +16,7 @@ import lt.lb.configurablelexer.token.base.LiteralToken;
  *
  * @author laim0nas100
  */
+@Deprecated
 public abstract class TokenMatchers {
 
     public static <T extends ConfToken> TokenMatcher<T> none() {
@@ -69,6 +70,10 @@ public abstract class TokenMatchers {
             name.append("+").append(matchers[i].name());
         }
         return new ConcatTokenMatcher(name.toString(), matchers);
+    }
+    
+    public static <T extends ConfToken> TokenMatcher<T> name(String name) {
+        return new NoneTokenMatcher<>().named(name);
     }
 
 }

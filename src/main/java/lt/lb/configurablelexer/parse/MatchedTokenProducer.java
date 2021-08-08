@@ -8,6 +8,7 @@ import lt.lb.configurablelexer.utils.BufferedIterator;
  *
  * @author laim0nas100
  */
+@Deprecated
 public interface MatchedTokenProducer<T extends ConfToken> extends BufferedIterator<MatchedTokens<T>> {
 
     public static class MatchedTokenProducerException extends Exception {
