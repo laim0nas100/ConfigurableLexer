@@ -18,6 +18,12 @@ public class ConfCharPredicate implements IntPredicate {
     protected Set<Integer> disallowedChars;
     protected List<IntPredicate> allowed;
     protected List<IntPredicate> disallowed;
+    protected boolean defaultCondition = true;
+
+    public ConfCharPredicate setDefault(boolean defaultCondition) {
+        this.defaultCondition = defaultCondition;
+        return this;
+    }
 
     public ConfCharPredicate allowChars(Collection<Integer> ac) {
         if (allowedChars == null) {
@@ -97,7 +103,7 @@ public class ConfCharPredicate implements IntPredicate {
         if (disallowedChars != null) {
             return !disallowedChars.contains(c);
         } else {
-            return true; // same as disalowed is empty
+            return defaultCondition; // same as disalowed is empty
         }
     }
 
