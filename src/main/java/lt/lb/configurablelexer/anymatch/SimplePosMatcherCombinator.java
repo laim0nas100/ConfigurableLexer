@@ -123,7 +123,7 @@ public class SimplePosMatcherCombinator<T, I, P extends PosMatch<T, I>> extends 
 
     }
 
-    public static <T, P extends PosMatch<T, P>> List<PosMatched<T, P>> tryMatchAll(Iterator<T> items, Collection<P> matchersCol) throws MatchException {
+    public static <T, P extends PosMatch<T, P>> List<PosMatched<T, P>> tryMatchAll(Iterator<T> items, Collection<? extends P> matchersCol) throws MatchException {
 
         List<P> matchers = matchersCol.stream()
                 .filter(p -> p.getLength() > 0)
@@ -143,7 +143,7 @@ public class SimplePosMatcherCombinator<T, I, P extends PosMatch<T, I>> extends 
     protected List<P> matchers;
     protected RefillableBuffer<T> refillable;
 
-    public SimplePosMatcherCombinator(Iterator<T> items, Collection<P> matchers) {
+    public SimplePosMatcherCombinator(Iterator<T> items, Collection<? extends P> matchers) {
         Objects.requireNonNull(matchers);
         this.refillable = new RefillableBuffer<>(items);
 
@@ -153,12 +153,8 @@ public class SimplePosMatcherCombinator<T, I, P extends PosMatch<T, I>> extends 
                 .collect(Collectors.toList());
     }
 
-    
-    public Iterator<PosMatched<T, I>> lift(Collection<PosMatch<PosMatched<T, I>, I>> matchers) {
-        Iterator<PosMatched<T, I>> iterator = this.toSimplifiedIterator().iterator();
-        SimplePosMatcherCombinator<PosMatched<T, I>, I, PosMatch<PosMatched<T, I>, I>> simplePosMatcherCombinator = new SimplePosMatcherCombinator<>(iterator, matchers);
-        
-        Iterator<PosMatched<PosMatched<T, I>, I>> iterator1 = simplePosMatcherCombinator.toSimplifiedIterator().iterator();
+    public static <T, I> Iterator<PosMatched<T, I>> flatLift(Iterator<PosMatched<T, I>> iterator, Collection<? extends PosMatch<PosMatched<T, I>, I>> matchers) {
+        Iterator<PosMatched<PosMatched<T, I>, I>> iterator1 = lift(iterator, matchers);
         return new Iterator<PosMatched<T, I>>() {
             @Override
             public boolean hasNext() {
@@ -168,7 +164,7 @@ public class SimplePosMatcherCombinator<T, I, P extends PosMatch<T, I>> extends 
             @Override
             public PosMatched<T, I> next() {
                 PosMatched<PosMatched<T, I>, I> next = iterator1.next();
-                if(next.matchedBy.isEmpty()){
+                if (next.matchedBy.isEmpty()) {
                     return next.getItem(0);
                 }
                 List<T> items = next.items.stream().flatMap(m -> m.items.stream()).collect(Collectors.toList());
@@ -176,6 +172,10 @@ public class SimplePosMatcherCombinator<T, I, P extends PosMatch<T, I>> extends 
             }
         };
 
+    }
+    
+    public static <T, I> Iterator<PosMatched<PosMatched<T, I>,I>> lift(Iterator<PosMatched<T, I>> iterator, Collection<? extends PosMatch<PosMatched<T, I>, I>> matchers) {
+        return new SimplePosMatcherCombinator<>(iterator, matchers).toSimplifiedIterator().iterator();
     }
 
     @Override

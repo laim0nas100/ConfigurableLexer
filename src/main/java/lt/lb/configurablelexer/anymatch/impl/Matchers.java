@@ -11,55 +11,93 @@ import lt.lb.configurablelexer.anymatch.PosMatched;
 /**
  *
  * @author laim0nas100
+ * @param <T> type of items to be matched
+ * @param <I> matcher id type
+ * @param <P> base PosMatch type
+ * @param <PP> base PosMatch lifted type
+ * @param <M> Matchers implementation
+ *
+ *
  */
-public class Matchers<T, I> {
+public abstract class Matchers<T, I, P extends PosMatch<T, I>, PP extends PosMatch<PosMatched<T, I>, I>, M extends Matchers<T, I, P, PP, M>> {
 
     protected I name;
     protected boolean repeating;
     protected int importance;
 
-    public Matchers<T, I> makeNew(I name) {
+    public static class SimpleMatchers<T, I> extends Matchers<T, I, PosMatch<T, I>, PosMatch<PosMatched<T, I>, I>, SimpleMatchers<T, I>> {
+
+        @Override
+        protected PosMatch<T, I> simpleType(PosMatch<T, I> posMatched) {
+            return posMatched;
+        }
+
+        @Override
+        protected PosMatch<PosMatched<T, I>, I> liftedType(PosMatch<PosMatched<T, I>, I> posMatchedLift) {
+            return posMatchedLift;
+        }
+
+        @Override
+        protected SimpleMatchers<T, I> create() {
+            return new SimpleMatchers<>();
+        }
+
+        @Override
+        protected SimpleMatchers<T, I> me() {
+            return this;
+        }
+
+    }
+
+    public static <T, I> SimpleMatchers<T, I> simple() {
+        return new SimpleMatchers<>();
+    }
+
+    public M makeNew(I name) {
         Objects.requireNonNull(name);
-        Matchers<T, I> matchers = new Matchers<>();
+        M matchers = this.create();
         matchers.name = name;
         matchers.importance = importance;
         matchers.repeating = repeating;
         return matchers;
     }
 
-    public Matchers<T, I> setDefaultName(I name) {
-        this.name = name;
-        return this;
+    public M setDefaultName(I name) {
+        M me = me();
+        me.name = name;
+        return me;
     }
 
-    public Matchers<T, I> repeating(boolean repeating) {
-        this.repeating = repeating;
-        return this;
+    public M repeating(boolean repeating) {
+        M me = me();
+        me.repeating = repeating;
+        return me;
     }
 
-    public Matchers<T, I> importance(int importance) {
-        this.importance = importance;
-        return this;
+    public M importance(int importance) {
+        M me = me();
+        me.importance = importance;
+        return me;
     }
 
-    public PredicatePosMatch<T, I> isWhen(Predicate<T> pred) {
+    public P isWhen(Predicate<T> pred) {
         return decorate(new PredicatePosMatch<>(pred));
     }
 
-    public PredicatePosMatch<T, I> isNotWhen(Predicate<T> pred) {
+    public P isNotWhen(Predicate<T> pred) {
         Objects.requireNonNull(pred);
         return decorate(new PredicatePosMatch<>(pred.negate()));
     }
 
-    public PredicatePosMatch<T, I> isEqual(T other) {
+    public P isEqual(T other) {
         return decorate(new PredicatePosMatch<>(t -> Objects.equals(t, other)));
     }
 
-    public PredicatePosMatch<T, I> isNotEqual(T other) {
+    public P isNotEqual(T other) {
         return decorate(new PredicatePosMatch<>(t -> !Objects.equals(t, other)));
     }
 
-    public PredicatePosMatch<T, I> ofType(Class<? extends T> cls, final boolean exact) {
+    public P ofType(Class<? extends T> cls, final boolean exact) {
         Objects.requireNonNull(cls);
         return decorate(new PredicatePosMatch<>(t -> {
             if (exact) {
@@ -72,72 +110,80 @@ public class Matchers<T, I> {
         }));
     }
 
-    public PredicatePosMatch<T, I> ofType(Class<? extends T> cls) {
+    public P ofType(Class<? extends T> cls) {
         return ofType(cls, false);
     }
 
-    public AnyPosMatch<T, I> any(int len) {
+    public P any(int len) {
         return decorate(new AnyPosMatch<>(len));
     }
 
-    public AnyPosMatch<PosMatched<T, I>, I> anyLifted(int len) {
+    public PP anyLifted(int len) {
         return decorateLifted(new AnyPosMatch<>(len));
     }
 
-    public DisjunctionPosMatch<T, I> or(PosMatch<T, I>... matchers) {
+    public P or(PosMatch<T, I>... matchers) {
         return decorate(new DisjunctionPosMatch<>(matchers));
     }
 
-    public DisjunctionPosMatch<PosMatched<T, I>, I> orLifted(PosMatch<PosMatched<T, I>, I>... matchers) {
+    public PP orLifted(PosMatch<PosMatched<T, I>, I>... matchers) {
         return decorateLifted(new DisjunctionPosMatch<>(matchers));
     }
 
-    public ConjuctionPosMatch<T, I> and(PosMatch<T, I>... matchers) {
+    public P and(PosMatch<T, I>... matchers) {
         return decorate(new ConjuctionPosMatch<>(matchers));
     }
 
-    public ConjuctionPosMatch<PosMatched<T, I>, I> andLifted(PosMatch<PosMatched<T, I>, I>... matchers) {
+    public PP andLifted(PosMatch<PosMatched<T, I>, I>... matchers) {
         return decorateLifted(new ConjuctionPosMatch<>(matchers));
     }
 
-    public ConcatPosMatch<T, I> concat(PosMatch<T, I>... matchers) {
+    public P concat(PosMatch<T, I>... matchers) {
         return decorate(new ConcatPosMatch<>(matchers));
     }
 
-    public ConcatPosMatch<PosMatched<T, I>, I> concatLifted(PosMatch<PosMatched<T, I>, I>... matchers) {
+    public PP concatLifted(PosMatch<PosMatched<T, I>, I>... matchers) {
         return decorateLifted(new ConcatPosMatch<>(matchers));
     }
 
-    public ConcatPosMatch<PosMatched<T, I>, I> concatLifted(I... names) {
+    public PP concatLifted(I... names) {
         List<NameLiftPosMatch<T, I>> collect = Stream.of(names).map(n -> new NameLiftPosMatch<T, I>(n)).collect(Collectors.toList());
         return decorateLifted(new ConcatPosMatch<>(collect));
     }
 
-    public ConcatPosMatch<PosMatched<T, I>, I> concatLiftedNames(PosMatch<T, I>... matchers) {
+    public PP concatLiftedNames(PosMatch<T, I>... matchers) {
         List<NameLiftPosMatch<T, I>> collect = Stream.of(matchers).map(n -> new NameLiftPosMatch<T, I>(n.getName())).collect(Collectors.toList());
         return decorateLifted(new ConcatPosMatch<>(collect));
     }
 
-    public NameLiftPosMatch<T, I> lifted(I name) {
+    public PP lifted(I name) {
         return decorateLifted(new NameLiftPosMatch<>(name));
     }
 
-    public NameLiftPosMatch<T, I> lifted(PosMatch<T, I> posMatch) {
+    public PP lifted(PosMatch<T, I> posMatch) {
         return decorateLifted(new NameLiftPosMatch<>(posMatch.getName()));
     }
 
-    protected <K extends BasePosMatch<T, I>> K decorate(K k) {
+    protected <K extends BasePosMatch<T, I>> P decorate(K k) {
         k.importance = importance;
         k.name = name;
         k.repeating = repeating;
-        return k;
+        return simpleType(k);
     }
 
-    protected <K extends BasePosMatch<PosMatched<T, I>, I>> K decorateLifted(K k) {
+    protected <K extends BasePosMatch<PosMatched<T, I>, I>> PP decorateLifted(K k) {
         k.importance = importance;
         k.name = name;
         k.repeating = repeating;
-        return k;
+        return liftedType(k);
     }
+
+    protected abstract P simpleType(PosMatch<T, I> posMatched);
+
+    protected abstract PP liftedType(PosMatch<PosMatched<T, I>, I> posMatchedLift);
+
+    protected abstract M create();
+
+    protected abstract M me();
 
 }

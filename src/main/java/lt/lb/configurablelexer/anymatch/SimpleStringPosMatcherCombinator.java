@@ -9,7 +9,7 @@ import java.util.Iterator;
  */
 public class SimpleStringPosMatcherCombinator<T> extends SimplePosMatcherCombinator<T, String, PosMatch<T, String>> {
 
-    public SimpleStringPosMatcherCombinator(Iterator<T> items, Collection<PosMatch<T, String>> matchers) {
+    public SimpleStringPosMatcherCombinator(Iterator<T> items, Collection<? extends PosMatch<T, String>> matchers) {
         super(items, matchers);
     }
     
