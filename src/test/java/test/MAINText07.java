@@ -39,7 +39,7 @@ import lt.lb.configurablelexer.utils.BufferedIterator.SimplifiedBufferedIterator
 public class MAINText07 {
 
     public static void main(String[] args) throws Exception {
-        URL resource = Redirecter.class.getResource("/parse_text_strings.txt");
+        URL resource = Redirecter.class.getResource("/parse_text_strings_1.txt");
         BufferedReader input = Files.newBufferedReader(Paths.get(resource.toURI()), StandardCharsets.UTF_8);
         DefaultConfTokenizer<ConfToken> tokenizer = new DefaultConfTokenizer();
 
@@ -48,6 +48,9 @@ public class MAINText07 {
         tokenizer.getConfCallbacks()
                 .setTokenCharPredicate(
                         new ConfCharPredicate().disallowWhen(Character::isWhitespace)
+                )
+                .setBreakCharPredicate(
+                        new ConfCharPredicate().allowChars('{','}').setDefault(false)
                 )
                 .addListener(lineListener);
 
