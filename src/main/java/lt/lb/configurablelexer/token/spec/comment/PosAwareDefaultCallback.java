@@ -9,6 +9,8 @@ import lt.lb.configurablelexer.token.spec.PositionAwareDefaultCallback;
 /**
  *
  * @author laim0nas100
+ * @param <T>
+ * @param <PosInfo>
  */
 public abstract class PosAwareDefaultCallback<T extends ConfToken, PosInfo> extends PositionAwareDefaultCallback<T, PosInfo> {
 

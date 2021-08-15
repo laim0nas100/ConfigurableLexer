@@ -61,7 +61,11 @@ public abstract class StringAwareCallbackBase<T extends ConfToken, PosInfo> exte
 
     @Override
     public boolean isBreakChar(int c) {
-        return !within && super.isBreakChar(c);
+        if (within) {
+            return endPred.test(c); // end string and break the token
+        } else { // not within
+            return super.isBreakChar(c);
+        }
     }
 
     public IntPredicate getStartPred() {
