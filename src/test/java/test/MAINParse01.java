@@ -193,7 +193,7 @@ public class MAINParse01 {
         lexer.addMatcher(new KeywordMatcher("]", true));
         lexer.addMatcher(new KeywordMatcher(",", true));
 
-        ConfTokenizer myTokenizer = tokenizer;
+        ConfTokenizer<ConfToken> myTokenizer = tokenizer;
         myTokenizer.reset(input);
         ConfMatchers M = new ConfMatchers();
         PM any = M.makeNew("ANY").importance(-1).any(1);
@@ -223,10 +223,9 @@ public class MAINParse01 {
 
         List<PM> asList = Arrays.asList(identifierSequence, assignment, expMid, expEnd, end, any, arrayStart, arrayStart1, arrayCont, arrayEnd);
         myTokenizer.reset(input);
+        Iterator<PosMatched<ConfToken, String>> matching = SimplePosMatcherCombinator.matching(true, myTokenizer.toSimplifiedIterator().iterator(), asList);
 
-        SimpleStringPosMatcherCombinator<ConfToken> simpleStringPosMatcherCombinator = new SimpleStringPosMatcherCombinator<>(myTokenizer.toSimplifiedIterator().iterator(), asList);
-
-        Iterator<PosMatched<ConfToken, String>> flatLift = SimplePosMatcherCombinator.flatLift(simpleStringPosMatcherCombinator.toSimplifiedIterator().iterator(), Arrays.asList(array, emptyArray, exp));
+        Iterator<PosMatched<ConfToken, String>> flatLift = SimplePosMatcherCombinator.flatLift(true, matching, Arrays.asList(array, emptyArray, exp));
 
         StringBuilder sb = new StringBuilder();
 

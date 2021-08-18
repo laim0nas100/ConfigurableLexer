@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -122,21 +123,25 @@ public class SimplePosMatcherCombinator<T, I, P extends PosMatch<T, I>> extends 
      * } and collect everything to the list.
      *
      * @param <T>
+     * @param <I>
      * @param <P>
+     * @param sort if sort matchers before using
      * @param items
      * @param matchersCol
      * @return
      */
-    public static <T, P extends PosMatch<T, P>> List<PosMatched<T, P>> tryMatchAll(Iterator<T> items, Collection<? extends P> matchersCol) {
-
-        List<P> matchers = matchersCol.stream()
-                .filter(p -> p.getLength() > 0)
-                .sorted(cmpMatchers)
-                .collect(Collectors.toList());
+    public static <T, I, P extends PosMatch<T, I>> List<PosMatched<T, I>> tryMatchAll(boolean sort, Iterator<T> items, Collection<? extends P> matchersCol) {
+        Collection<? extends P> matchers = matchersCol;
+        if (sort) {
+            matchers = matchersCol.stream()
+                    .filter(p -> p.getLength() > 0)
+                    .sorted(cmpMatchers)
+                    .collect(Collectors.toList());
+        }
 
         RefillableBuffer<T> refillable = new RefillableBuffer<>(items);
-        ArrayList<PosMatched<T, P>> matched = new ArrayList<>();
-        Optional<PosMatched<T, P>> findBestMatch = findBestMatch(refillable, matchers);
+        ArrayList<PosMatched<T, I>> matched = new ArrayList<>();
+        Optional<PosMatched<T, I>> findBestMatch = findBestMatch(refillable, matchers);
 
         while (findBestMatch.isPresent()) {
             matched.add(findBestMatch.get());
@@ -149,13 +154,66 @@ public class SimplePosMatcherCombinator<T, I, P extends PosMatch<T, I>> extends 
     protected RefillableBuffer<T> refillable;
 
     public SimplePosMatcherCombinator(Iterator<T> items, Collection<? extends P> matchers) {
+        this(true, items, matchers);
+    }
+
+    public SimplePosMatcherCombinator(boolean applySort, Iterator<T> items, Collection<? extends P> matchers) {
         Objects.requireNonNull(matchers);
         this.refillable = new RefillableBuffer<>(items);
 
-        this.matchers = matchers.stream()
-                .filter(p -> p.getLength() > 0)
-                .sorted(cmpMatchers)
-                .collect(Collectors.toList());
+        if (applySort) {
+            this.matchers = matchers.stream()
+                    .filter(p -> p.getLength() > 0)
+                    .sorted(cmpMatchers)
+                    .collect(Collectors.toList());
+        } else {
+            this.matchers = new ArrayList<>(matchers);
+        }
+    }
+
+    public static <T, I, P extends PosMatch<T, I>> Iterator<PosMatched<T, I>> matching(boolean sort, Iterator<T> items, Collection<? extends P> matchersCol) {
+        return new SimplePosMatcherIterator<>(sort, items, matchersCol);
+    }
+
+    public static class SimplePosMatcherIterator<T, I> implements Iterator<PosMatched<T, I>> {
+
+        public SimplePosMatcherIterator(boolean sort, Iterator<T> items, Collection<? extends PosMatch<T, I>> matchersCol) {
+            refillable = new RefillableBuffer<>(items);
+            if (sort) {
+                finalMatchers = matchersCol.stream()
+                        .filter(p -> p.getLength() > 0)
+                        .sorted(cmpMatchers)
+                        .collect(Collectors.toList());
+            } else {
+                finalMatchers = matchersCol;
+            }
+        }
+
+        final Collection<? extends PosMatch<T, I>> finalMatchers;
+        final RefillableBuffer<T> refillable;
+        Optional<PosMatched<T, I>> findBestMatch;
+
+        @Override
+        public boolean hasNext() {
+            if (findBestMatch == null) {
+                findBestMatch = findBestMatch(refillable, finalMatchers);
+            }
+            return findBestMatch.isPresent();
+        }
+
+        @Override
+        public PosMatched<T, I> next() {
+            if (findBestMatch == null) {
+                findBestMatch = findBestMatch(refillable, finalMatchers);
+            }
+            if (findBestMatch.isPresent()) {
+                PosMatched<T, I> get = findBestMatch.get();
+                findBestMatch = null;
+                return get;
+            }
+            throw new NoSuchElementException("No more items");
+        }
+
     }
 
     /**
@@ -165,12 +223,13 @@ public class SimplePosMatcherCombinator<T, I, P extends PosMatch<T, I>> extends 
      *
      * @param <T>
      * @param <I>
+     * @param sort
      * @param iterator
      * @param matchers
      * @return
      */
-    public static <T, I> Iterator<PosMatched<T, I>> flatLift(Iterator<PosMatched<T, I>> iterator, Collection<? extends PosMatch<PosMatched<T, I>, I>> matchers) {
-        Iterator<PosMatched<PosMatched<T, I>, I>> iterator1 = lift(iterator, matchers);
+    public static <T, I> Iterator<PosMatched<T, I>> flatLift(boolean sort, Iterator<PosMatched<T, I>> iterator, Collection<? extends PosMatch<PosMatched<T, I>, I>> matchers) {
+        Iterator<PosMatched<PosMatched<T, I>, I>> iterator1 = lift(sort, iterator, matchers);
         return new Iterator<PosMatched<T, I>>() {
             @Override
             public boolean hasNext() {
@@ -199,12 +258,13 @@ public class SimplePosMatcherCombinator<T, I, P extends PosMatch<T, I>> extends 
      *
      * @param <T>
      * @param <I>
+     * @param sort
      * @param iterator
      * @param matchers
      * @return
      */
-    public static <T, I> Iterator<PosMatched<PosMatched<T, I>, I>> lift(Iterator<PosMatched<T, I>> iterator, Collection<? extends PosMatch<PosMatched<T, I>, I>> matchers) {
-        return new SimplePosMatcherCombinator<>(iterator, matchers).toSimplifiedIterator().iterator();
+    public static <T, I> Iterator<PosMatched<PosMatched<T, I>, I>> lift(boolean sort, Iterator<PosMatched<T, I>> iterator, Collection<? extends PosMatch<PosMatched<T, I>, I>> matchers) {
+        return new SimplePosMatcherIterator<>(sort, iterator, matchers);
     }
 
     @Override

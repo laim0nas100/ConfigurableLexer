@@ -1,7 +1,6 @@
 package lt.lb.configurablelexer.token;
 
 import java.util.function.Function;
-import lt.lb.configurablelexer.Redirecter;
 
 /**
  *
