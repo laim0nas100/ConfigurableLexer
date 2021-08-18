@@ -1,16 +1,13 @@
 package test;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.Reader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.regex.Pattern;
 import lt.lb.configurablelexer.Redirecter;
 import lt.lb.configurablelexer.lexer.SimpleLexer;
+import lt.lb.configurablelexer.lexer.SimpleLexerOptimized;
 import lt.lb.configurablelexer.lexer.matchers.FloatMatcher;
 import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
 import lt.lb.configurablelexer.lexer.matchers.StringMatcher;
@@ -37,7 +34,7 @@ import lt.lb.configurablelexer.token.simple.Pos;
 public class MAINText01 {
 
     public static void main(String[] args) throws Exception {
-        URL resource = Redirecter.class.getResource("/parse_text.txt");
+        URL resource = MAINText01.class.getResource("/parse_text.txt");
         BufferedReader input = Files.newBufferedReader(Paths.get(resource.toURI()), StandardCharsets.UTF_8);
 
         ConfTokenizerCallbacks callbacks = new ConfTokenizerCallbacks<>();
@@ -106,7 +103,7 @@ public class MAINText01 {
 
         };
 
-        SimpleLexer lexer = new SimpleLexer(tokenizer_with_comments) {
+        SimpleLexer lexer = new SimpleLexerOptimized(tokenizer_with_comments) {
             @Override
             public BaseStringToken<Pos> makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String str) throws Exception {
                 Pos pos = new Pos(lineListener.getLine() + 1, from + lineListener.getColumn() - str.length());

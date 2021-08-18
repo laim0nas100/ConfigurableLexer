@@ -1,26 +1,27 @@
 package test;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.Reader;
-import java.io.StringReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 import java.util.regex.Pattern;
 import lt.lb.configurablelexer.Redirecter;
-import lt.lb.configurablelexer.lexer.SimpleLexer;
+import lt.lb.configurablelexer.anymatch.PosMatched;
+import lt.lb.configurablelexer.anymatch.impl.ConfMatchers;
+import lt.lb.configurablelexer.anymatch.impl.ConfMatchers.PM;
+import lt.lb.configurablelexer.anymatch.impl.ConfMatchers.PPM;
+import lt.lb.configurablelexer.anymatch.impl.SimplePosMatcherCombinator;
+import lt.lb.configurablelexer.anymatch.impl.SimpleStringPosMatcherCombinator;
+import lt.lb.configurablelexer.lexer.SimpleLexerOptimized;
 import lt.lb.configurablelexer.lexer.matchers.FloatMatcher;
 import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
 import lt.lb.configurablelexer.lexer.matchers.StringMatcher;
 import lt.lb.configurablelexer.lexer.matchers.KeywordMatcher;
 import lt.lb.configurablelexer.lexer.matchers.RegexMatcher;
-import lt.lb.configurablelexer.parse.DefaultMatchedTokenProducer;
-import lt.lb.configurablelexer.parse.TokenMatcher;
-import lt.lb.configurablelexer.parse.TokenMatchers;
 import lt.lb.configurablelexer.token.base.KeywordToken;
 import lt.lb.configurablelexer.token.base.BaseStringToken;
 import lt.lb.configurablelexer.token.ConfCharPredicate;
@@ -103,7 +104,7 @@ public class MAINParse01 {
 
     public static void main(String[] args) throws Exception {
 
-        URL resource = Redirecter.class.getResource("/parse_text_expression.txt");
+        URL resource = MAINParse01.class.getResource("/parse_text_expression.txt");
 
         BufferedReader input = Files.newBufferedReader(Paths.get(resource.toURI()), StandardCharsets.UTF_8);
 
@@ -117,7 +118,7 @@ public class MAINParse01 {
                 )
                 .addListener(lineListener);
 
-        SimpleLexer lexer = tokenizer.getConfCallbacks().nest(t -> new SimpleLexer<ConfToken>(t) {
+        SimpleLexerOptimized lexer = tokenizer.getConfCallbacks().nest(t -> new SimpleLexerOptimized<ConfToken>(t) {
             @Override
             public BaseStringToken<Pos> makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String str) throws Exception {
                 Pos pos = lineListener.getPos(from, str.length());
@@ -194,41 +195,44 @@ public class MAINParse01 {
 
         ConfTokenizer myTokenizer = tokenizer;
         myTokenizer.reset(input);
+        ConfMatchers M = new ConfMatchers();
+        PM any = M.makeNew("ANY").importance(-1).any(1);
+        PM number = M.ofType(NumberToken.class);
+        PM op = M.ofType(OperatorToken.class);
+        PM type = M.or(M.exact("int"), M.exact("float"));
+        PM identifier = M.ofType(IdentifierToken.class);
+        PM eq = M.exact("=");
+        PM variable = M.makeNew("var").or(number, identifier);
 
-        TokenMatcher any = TokenMatchers.any(1).importance(-1); // will appear at the end of matched list. Default importance is 0
-        TokenMatcher number = TokenMatchers.ofType(NumberToken.class);
-        TokenMatcher op = TokenMatchers.ofType(OperatorToken.class);
-        TokenMatcher type = TokenMatchers.or(TokenMatchers.exact("int"), TokenMatchers.exact("float"));
-        TokenMatcher identifier = TokenMatchers.ofType(IdentifierToken.class);
-        TokenMatcher eq = TokenMatchers.exact("=");
-        TokenMatcher variable = number.orWith(identifier).named("var");
+        PM expMid = M.makeNew("exp").concat(variable, op, number);
+        PM expEnd = M.makeNew("exp end").repeating(true).concat(op, variable);
+        PM end = M.makeNew("end").concat(op, variable, M.exact(";"));
 
-        TokenMatcher exprStart = TokenMatchers.concat(variable, op).named("exp start");
-        TokenMatcher expMid = TokenMatchers.concat(variable, op, number).named("exp");
-        TokenMatcher expEnd = TokenMatchers.concat(op, variable).named("exp end");
-        TokenMatcher end = TokenMatchers.concat(op, variable, TokenMatchers.exact(";")).named("end");
+        PM arrayStart = M.makeNew("array start").exact("[");
+        PM arrayStart1 = M.makeNew("array start 1").concat(arrayStart, variable);
+        PM arrayCont = M.makeNew("arrayCont").repeating(true).concat(M.exact(","), variable);
 
-        TokenMatcher arrayStart = TokenMatchers.concat(TokenMatchers.exact("[")).named("array start");
-        TokenMatcher arrayStart1 = TokenMatchers.concat(TokenMatchers.exact("["), variable).named("array start 1");
-        TokenMatcher arrayCont = TokenMatchers.concat(TokenMatchers.exact(","), variable).named("arrayCont").repeating(true);
+        PM arrayEnd = M.makeNew("array end").exact("]");
+        PM assignment = M.makeNew("assigment").concat(type, identifier, eq);
 
-        TokenMatcher arrayEnd = TokenMatchers.concat(TokenMatchers.exact("]")).named("array end");
+        PM identifierSequence = M.makeNew("Identifier seq").repeating(true).or(identifier);
 
-        TokenMatcher assignment = TokenMatchers.concat(type, identifier, eq).named("Assignment");
+        PPM array = M.makeNew("array").concatLiftedNames(arrayStart1, arrayCont, arrayEnd);
+        PPM emptyArray = M.makeNew("empty array").concatLiftedNames(arrayStart, arrayEnd);
+        PPM exp = M.makeNew("full exp").concatLiftedNames(expMid, expEnd);
 
-        TokenMatcher identiefierSequence = identifier.repeating(true).named("Identifier seq");
-
+        List<PM> asList = Arrays.asList(identifierSequence, assignment, expMid, expEnd, end, any, arrayStart, arrayStart1, arrayCont, arrayEnd);
         myTokenizer.reset(input);
 
-        DefaultMatchedTokenProducer defaultMatchedTokenProducer = new DefaultMatchedTokenProducer<>(myTokenizer,
-                Arrays.asList(identiefierSequence, assignment, exprStart, expMid, expEnd, end, any, arrayStart, arrayStart1, arrayCont, arrayEnd)
-        );
+        SimpleStringPosMatcherCombinator<ConfToken> simpleStringPosMatcherCombinator = new SimpleStringPosMatcherCombinator<>(myTokenizer.toSimplifiedIterator().iterator(), asList);
+
+        Iterator<PosMatched<ConfToken, String>> flatLift = SimplePosMatcherCombinator.flatLift(simpleStringPosMatcherCombinator.toSimplifiedIterator().iterator(), Arrays.asList(array, emptyArray, exp));
 
         StringBuilder sb = new StringBuilder();
 
-        defaultMatchedTokenProducer.toSimplifiedIterator().forEach(m -> {
-            sb.append(m).append("\n");
-        });
+        while (flatLift.hasNext()) {
+            sb.append(flatLift.next()).append("\n");
+        }
         System.out.println(sb);
 
         input.close();

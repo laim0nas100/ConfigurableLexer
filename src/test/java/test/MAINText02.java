@@ -1,21 +1,17 @@
 package test;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.Reader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.regex.Pattern;
 import lt.lb.configurablelexer.Redirecter;
 import lt.lb.configurablelexer.lexer.SimpleLexer;
+import lt.lb.configurablelexer.lexer.SimpleLexerOptimized;
 import lt.lb.configurablelexer.lexer.matchers.FloatMatcher;
 import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
 import lt.lb.configurablelexer.lexer.matchers.StringMatcher;
 import lt.lb.configurablelexer.lexer.matchers.KeywordMatcher;
-import lt.lb.configurablelexer.lexer.matchers.RegexMatcher;
 import lt.lb.configurablelexer.token.base.KeywordToken;
 import lt.lb.configurablelexer.token.base.BaseStringToken;
 import lt.lb.configurablelexer.token.BaseTokenizer;
@@ -28,7 +24,6 @@ import lt.lb.configurablelexer.token.TokenizerCallbacks;
 import lt.lb.configurablelexer.token.base.CommentToken;
 import lt.lb.configurablelexer.token.base.LiteralToken;
 import lt.lb.configurablelexer.token.base.NumberToken;
-import lt.lb.configurablelexer.token.base.ProcessedToken;
 import lt.lb.configurablelexer.token.simple.Pos;
 import lt.lb.configurablelexer.token.spec.comment.LineCommentAwareCallback;
 
@@ -39,7 +34,7 @@ import lt.lb.configurablelexer.token.spec.comment.LineCommentAwareCallback;
 public class MAINText02 {
 
     public static void main(String[] args) throws Exception {
-        URL resource = Redirecter.class.getResource("/parse_text.txt");
+        URL resource = MAINText02.class.getResource("/parse_text.txt");
         BufferedReader input = Files.newBufferedReader(Paths.get(resource.toURI()), StandardCharsets.UTF_8);
 
         ConfTokenizerCallbacks callbacks = new ConfTokenizerCallbacks<>();
@@ -85,7 +80,7 @@ public class MAINText02 {
             }
         };
 
-        SimpleLexer lexer = new SimpleLexer(tokenizer_with_comments) {
+        SimpleLexer lexer = new SimpleLexerOptimized(tokenizer_with_comments) {
             @Override
             public BaseStringToken<Pos> makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String str) throws Exception {
                 Pos pos = lineListener.getPos(from, str.length());

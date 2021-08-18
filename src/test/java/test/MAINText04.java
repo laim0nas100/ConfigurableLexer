@@ -1,15 +1,13 @@
 package test;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.Reader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import lt.lb.configurablelexer.Redirecter;
 import lt.lb.configurablelexer.lexer.SimpleLexer;
+import lt.lb.configurablelexer.lexer.SimpleLexerOptimized;
 import lt.lb.configurablelexer.lexer.matchers.FloatMatcher;
 import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
 import lt.lb.configurablelexer.lexer.matchers.StringMatcher;
@@ -38,7 +36,7 @@ import lt.lb.configurablelexer.token.spec.comment.MultilineCommentAwareCallback;
 public class MAINText04 {
 
     public static void main(String[] args) throws Exception {
-        URL resource = Redirecter.class.getResource("/parse_text.txt");
+        URL resource = MAINText04.class.getResource("/parse_text.txt");
         BufferedReader input = Files.newBufferedReader(Paths.get(resource.toURI()), StandardCharsets.UTF_8);
         ConfTokenizerCallbacks callbacks = new ConfTokenizerCallbacks<>().setTokenCharPredicate(
                 new ConfCharPredicate().disallowWhen(Character::isWhitespace)
@@ -127,7 +125,7 @@ public class MAINText04 {
             }
         };
 
-        SimpleLexer lexer = new SimpleLexer(tokenizer_with_comments) {
+        SimpleLexer lexer = new SimpleLexerOptimized(tokenizer_with_comments) {
             @Override
             public BaseStringToken<Pos> makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String str) throws Exception {
                 Pos pos = lineListener.getPos(from, str.length());

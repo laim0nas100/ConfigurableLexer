@@ -2,21 +2,22 @@ package test;
 
 import java.util.regex.Pattern;
 import lt.lb.configurablelexer.lexer.SimpleLexer;
+import lt.lb.configurablelexer.lexer.SimpleLexerOptimized;
 import lt.lb.configurablelexer.lexer.matchers.FloatMatcher;
 import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
-import lt.lb.configurablelexer.lexer.matchers.StringMatcher;
 import lt.lb.configurablelexer.lexer.matchers.KeywordMatcher;
-import lt.lb.configurablelexer.token.base.KeywordToken;
-import lt.lb.configurablelexer.token.base.BaseStringToken;
+import lt.lb.configurablelexer.lexer.matchers.StringMatcher;
 import lt.lb.configurablelexer.token.BaseTokenizer;
 import lt.lb.configurablelexer.token.ConfCharPredicate;
 import lt.lb.configurablelexer.token.ConfTokenizer;
 import lt.lb.configurablelexer.token.ConfTokenizerCallbacks;
-import lt.lb.configurablelexer.token.spec.LineAwareCharListener;
 import lt.lb.configurablelexer.token.TokenizerCallbacks;
+import lt.lb.configurablelexer.token.base.BaseStringToken;
+import lt.lb.configurablelexer.token.base.KeywordToken;
 import lt.lb.configurablelexer.token.base.LiteralToken;
 import lt.lb.configurablelexer.token.base.NumberToken;
 import lt.lb.configurablelexer.token.simple.Pos;
+import lt.lb.configurablelexer.token.spec.LineAwareCharListener;
 
 /**
  *
@@ -47,7 +48,7 @@ public class MAIN2 {
 
         callbacks.addListener(lineListener);
 
-        SimpleLexer lexer = new SimpleLexer(tokenizer) {
+        SimpleLexer lexer = new SimpleLexerOptimized(tokenizer) {
             @Override
             public BaseStringToken<Pos> makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String str) throws Exception {
                 Pos pos = new Pos(lineListener.getLine() + 1, from + lineListener.getColumn() - str.length());

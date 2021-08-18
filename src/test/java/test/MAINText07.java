@@ -1,14 +1,10 @@
 package test;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.Reader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import lt.lb.configurablelexer.Redirecter;
 import lt.lb.configurablelexer.lexer.SimpleLexer;
 import lt.lb.configurablelexer.lexer.matchers.FloatMatcher;
 import lt.lb.configurablelexer.lexer.matchers.IntegerMatcher;
@@ -39,7 +35,7 @@ import lt.lb.configurablelexer.utils.BufferedIterator.SimplifiedBufferedIterator
 public class MAINText07 {
 
     public static void main(String[] args) throws Exception {
-        URL resource = Redirecter.class.getResource("/parse_text_strings_1.txt");
+        URL resource = MAINText07.class.getResource("/parse_text_strings_1.txt");
         BufferedReader input = Files.newBufferedReader(Paths.get(resource.toURI()), StandardCharsets.UTF_8);
         DefaultConfTokenizer<ConfToken> tokenizer = new DefaultConfTokenizer();
 

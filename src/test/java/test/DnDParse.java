@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.regex.Pattern;
 import lt.lb.configurablelexer.lexer.SimpleLexer;
+import lt.lb.configurablelexer.lexer.SimpleLexerOptimized;
 import lt.lb.configurablelexer.lexer.matchers.RegexMatcher;
 import lt.lb.configurablelexer.lexer.matchers.StringMatcher;
 import lt.lb.configurablelexer.token.ConfCharPredicate;
@@ -74,7 +75,7 @@ public class DnDParse {
                         new ConfCharPredicate().disallowWhen(Character::isWhitespace)
                 );
 
-        SimpleLexer lexer = tokenizer.getConfCallbacks().nest(m -> new SimpleLexer<ConfToken>(m) {
+        SimpleLexer lexer = tokenizer.getConfCallbacks().nest(m -> new SimpleLexerOptimized<ConfToken>(m) {
             @Override
             public ConfToken makeLexeme(int from, int to, StringMatcher.MatcherMatch matcher, String unbrokenString) throws Exception {
                 String str = unbrokenString.substring(from, to);
