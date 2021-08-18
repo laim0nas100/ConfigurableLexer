@@ -71,14 +71,11 @@ public class SimplePosMatcherCombinator<T, I, P extends PosMatch<T, I>> extends 
                     }
 
                     if (matches) {
-                        if (!rep && len == size) {
-                            finalized.computeIfAbsent(size, c -> new ArrayList<>()).add(m.getName());
-                            max = Math.max(max, size);
-                        } else if (rep && size % len == 0) {
+                        if ((!rep && len == size) || (rep && size % len == 0)) {
                             finalized.computeIfAbsent(size, c -> new ArrayList<>()).add(m.getName());
                             max = Math.max(max, size);
                         }
-
+                        
                     } else {
                         iterator.remove();
                     }
@@ -89,7 +86,10 @@ public class SimplePosMatcherCombinator<T, I, P extends PosMatch<T, I>> extends 
             }
 
             if (finalized.isEmpty()) {
-                max = Math.min(1, liveList.size());
+                if (liveList.isEmpty()) {
+                    return Optional.empty();
+                }
+                max = 1;
                 ArrayList<T> tokens = new ArrayList<>(max);
 
                 for (int i = 0; i < max; i++) {
