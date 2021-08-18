@@ -1,7 +1,6 @@
 package lt.lb.configurablelexer.lexer.matchers;
 
 import java.util.Comparator;
-import java.util.Objects;
 import java.util.function.Predicate;
 import lt.lb.configurablelexer.Id;
 

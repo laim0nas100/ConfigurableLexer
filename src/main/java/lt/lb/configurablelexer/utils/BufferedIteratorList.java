@@ -6,6 +6,7 @@ import java.util.Optional;
 /**
  *
  * @author laim0nas100
+ * @param <T>
  */
 public abstract class BufferedIteratorList<T> implements BufferedIterator<T> {
 

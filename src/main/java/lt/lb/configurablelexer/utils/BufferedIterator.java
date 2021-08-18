@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 /**
  *
  * @author laim0nas100
+ * @param <T>
  */
 public interface BufferedIterator<T> {
 
@@ -80,7 +81,7 @@ public interface BufferedIterator<T> {
     }
 
     /**
-     * Iterate through ever item and place them in the list.
+     * Iterate through every item and place them in the list.
      *
      * @return
      * @throws Exception
@@ -116,14 +117,7 @@ public interface BufferedIterator<T> {
          * @throws Exception
          */
         public boolean hasNext() throws Exception {
-            if (!unsubmitted.isEmpty()) {
-                return true;
-            }
-            if (iter.hasNextBufferedItem()) {
-                return true;
-            }
-
-            return appendToUnsubmitted();
+            return !unsubmitted.isEmpty() || iter.hasNextBufferedItem() || appendToUnsubmitted();
         }
 
         protected boolean appendToUnsubmitted() throws Exception {
@@ -135,7 +129,6 @@ public interface BufferedIterator<T> {
                     }//can be empty buffer, so try again until non-empty buffer or no buffer at all is found
                 } else {
                     return false;
-
                 }
             }
         }
@@ -166,26 +159,34 @@ public interface BufferedIterator<T> {
          */
         @Override
         public Iterator<T> iterator() {
-            SimplifiedBufferedIterator<T> me = this;
-            return new Iterator<T>() {
-                @Override
-                public boolean hasNext() {
-                    try {
-                        return me.hasNext();
-                    } catch (Exception ex) {
-                        throw new IllegalStateException(ex);
-                    }
-                }
+            return new SimplifiedIterator<>(this);
+        }
+    }
 
-                @Override
-                public T next() {
-                    try {
-                        return me.next();
-                    } catch (Exception ex) {
-                        throw new IllegalStateException(ex);
-                    }
-                }
-            };
+    public static class SimplifiedIterator<T> implements Iterator<T> {
+
+        protected final SimplifiedBufferedIterator<T> sbi;
+
+        public SimplifiedIterator(SimplifiedBufferedIterator<T> sbi) {
+            this.sbi = Objects.requireNonNull(sbi, "SimplifiedBufferedIterator must not be null");
+        }
+
+        @Override
+        public boolean hasNext() {
+            try {
+                return sbi.hasNext();
+            } catch (Exception ex) {
+                throw new IllegalStateException(ex);
+            }
+        }
+
+        @Override
+        public T next() {
+            try {
+                return sbi.next();
+            } catch (Exception ex) {
+                throw new IllegalStateException(ex);
+            }
         }
     }
 }
