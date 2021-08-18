@@ -1,9 +1,14 @@
 package lt.lb.configurablelexer.lexer;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import lt.lb.configurablelexer.lexer.matchers.Match;
 import lt.lb.configurablelexer.lexer.matchers.Match.PartialMatch;
 import lt.lb.configurablelexer.lexer.matchers.StringMatcher;
 import lt.lb.configurablelexer.lexer.matchers.StringMatcher.MatcherMatch;
@@ -17,24 +22,46 @@ import lt.lb.configurablelexer.token.TokenizerCallbacks;
  * @author laim0nas100
  * @param <T>
  */
-public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T>, DelegatingTokenizerCallbacks<T> {
+public abstract class SimpleLexerOptimized<T extends ConfToken> extends SimpleLexer<T> {
 
-    protected TokenizerCallbacks<T> tokenizer;
-    protected List<StringMatcher> matchers = new ArrayList<>();
-
-    public SimpleLexer(TokenizerCallbacks<T> tokenizer) {
-        this.tokenizer = Objects.requireNonNull(tokenizer);
+    public SimpleLexerOptimized(TokenizerCallbacks<T> tokenizer) {
+        super(tokenizer);
     }
 
-    public void addMatcher(StringMatcher matcher) {
-        matchers.add(matcher);
+    public static Optional<MatcherMatch> optimizedFind(List<MatcherMatch> collected, String string, int from, int localLen) {
+
+        for (MatcherMatch mm : collected) {
+            if (mm.matcher.minSize() > localLen) {
+                continue;
+            }
+            if (!mm.matcher.canBeBreaking()) {
+                continue;
+            }
+            if (!mm.match.isPostive()) {
+                continue;
+            }
+
+            if (mm.match instanceof PartialMatch) {
+                PartialMatch match = (PartialMatch) mm.match;
+                if (match.isBreaking()) {
+                    int len = match.to - match.from;
+                    if (match.from == from && len == localLen) {
+                        return Optional.of(mm);
+                    }
+                }
+            }
+            Match match = mm.matcher.match(string, from, localLen);
+            if (!match.isBreaking() || !match.isPostive()) {
+                continue;
+            }
+
+            // try combine
+            return Optional.of(new MatcherMatch(mm.matcher, match));
+        }
+        return Optional.empty();
     }
 
     @Override
-    public ConfTokenBuffer<T> constructTokens(char[] buffer, int offset, int length) throws Exception {
-        return constructLexemes(buffer, offset, length);
-    }
-
     public ConfTokenBuffer<T> constructLexemes(char[] buffer, int offset, int length) throws Exception {
 
         String string = String.valueOf(buffer, offset, length);
@@ -53,19 +80,22 @@ public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T>, Dele
         while (moreMatches && processed < last) {
             final int localLen = last - processed;
             final int localOffset = processed;
-            Optional<MatcherMatch> optMatch = matchers.stream()
-                    .filter(m -> m.minSize() <= localLen)
-                    .map(m -> new MatcherMatch(m, m.match(string, localOffset, localLen)))
-                    .filter(m -> m.match.isPostive())
-                    .sorted(MatcherMatch.cmpMatcherMatch)
-                    .findFirst();
+            ArrayList<MatcherMatch> collect = new ArrayList<>(matchers.size());
+            for (StringMatcher sm : matchers) {
+                if (sm.minSize() <= localLen) {
+                    Match match = sm.match(string, localOffset, localLen);
+                    if (match.isPostive()) {
+                        collect.add(new MatcherMatch(sm, match));
+                    }
+                }
+            }
 
-            if (!optMatch.isPresent()) {
+            if (collect.isEmpty()) {
                 lexemes.add(makeLiteral(localOffset, last, string));
                 moreMatches = false;
             } else { // have matches
-
-                MatcherMatch first = optMatch.get();
+                collect.sort(MatcherMatch.cmpMatcherMatch);
+                MatcherMatch first = collect.get(0);
                 if (first.match.isFull()) {// best case
                     lexemes.add(makeLexeme(localOffset, last, first, string));
                     moreMatches = false;
@@ -82,13 +112,7 @@ public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T>, Dele
                     } else {
 
                         final int tempLocalLen = last - p.to;
-                        Optional<MatcherMatch> firstBreaking = matchers.stream()
-                                .filter(m -> m.minSize() <= tempLocalLen)
-                                .filter(m -> m.canBeBreaking())
-                                .map(m -> new MatcherMatch(m, m.match(string, p.to, tempLocalLen)))
-                                .filter(m -> m.match.isPostive() && m.match.isBreaking())
-                                .sorted(MatcherMatch.cmpMatcherMatch)
-                                .findFirst();
+                        Optional<MatcherMatch> firstBreaking = optimizedFind(collect, string, p.to, tempLocalLen);
                         if (firstBreaking.isPresent()) {
                             MatcherMatch get = firstBreaking.get();
                             if (get.match.isFull()) {
@@ -104,12 +128,8 @@ public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T>, Dele
                                     processed = p2.to;
                                 } else {// inexact cut mark
                                     final int startingSliceLen = p2.from - processed;
-                                    Optional<MatcherMatch> startingSliceFull = matchers.stream()
-                                            .filter(m -> m.minSize() >= startingSliceLen)
-                                            .map(m -> new MatcherMatch(m, m.match(string, localOffset, startingSliceLen)))
-                                            .filter(m -> m.match.isPostive() && m.match.isFull())
-                                            .sorted(MatcherMatch.cmpMatcherMatch)
-                                            .findFirst();
+
+                                    Optional<MatcherMatch> startingSliceFull = optimizedFind(collect, string, localOffset, startingSliceLen);
 
                                     if (startingSliceFull.isPresent()) {
                                         MatcherMatch slice = startingSliceFull.get();
@@ -136,22 +156,4 @@ public abstract class SimpleLexer<T extends ConfToken> implements Lexer<T>, Dele
 
         return ConfTokenBuffer.ofList(lexemes);
     }
-
-    public abstract T makeLexeme(int from, int to, MatcherMatch matcher, String unbrokenString) throws Exception;
-
-    public abstract T makeLiteral(int from, int to, String unbrokenString) throws Exception;
-
-    @Override
-    public TokenizerCallbacks<T> delegate() {
-        return tokenizer;
-    }
-
-    public List<StringMatcher> getMatchers() {
-        return matchers;
-    }
-
-    public void setMatchers(List<StringMatcher> matchers) {
-        this.matchers = matchers;
-    }
-
 }
