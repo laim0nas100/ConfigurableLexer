@@ -42,34 +42,4 @@ public interface PosMatch<T, M> extends Id {
      */
     public abstract boolean matches(int position, T item);
     
-    public default PosMatch<PosMatched<T,M>,M> lifted(){
-        PosMatch<T, M> me = this;
-        return new PosMatch<PosMatched<T, M>, M>(){
-            @Override
-            public M getName() {
-                return me.getName();
-            }
-
-            @Override
-            public int getLength() {
-                return me.getLength();
-            }
-
-            @Override
-            public boolean isRepeating() {
-                return me.isRepeating();
-            }
-
-            @Override
-            public int getImportance() {
-                return me.getImportance();
-            }
-
-            @Override
-            public boolean matches(int position, PosMatched<T, M> item) {
-                return item.matchedBy.indexOf(me.getName()) == position;
-            }
-        };
-    }
-
 }

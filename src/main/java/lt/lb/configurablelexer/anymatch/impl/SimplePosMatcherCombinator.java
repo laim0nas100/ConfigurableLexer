@@ -1,4 +1,4 @@
-package lt.lb.configurablelexer.anymatch;
+package lt.lb.configurablelexer.anymatch.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lt.lb.configurablelexer.anymatch.PosMatch;
+import lt.lb.configurablelexer.anymatch.PosMatched;
 import lt.lb.configurablelexer.utils.BufferedIteratorList;
 import lt.lb.configurablelexer.utils.RefillableBuffer;
 
@@ -23,34 +25,26 @@ import lt.lb.configurablelexer.utils.RefillableBuffer;
  */
 public class SimplePosMatcherCombinator<T, I, P extends PosMatch<T, I>> extends BufferedIteratorList<PosMatched<T, I>> {
 
-    public static class MatchException extends Exception {
+    /**
+     * Compare longest first and then by importance.
+     */
+    public static final Comparator<PosMatch> cmpMatchers = (PosMatch o1, PosMatch o2) -> {
+        int c = Integer.compare(o2.getLength(), o1.getLength());
+        return c == 0 ? Integer.compare(o2.getImportance(), o1.getImportance()) : c;
+    };
 
-        public MatchException() {
-        }
-
-        public MatchException(String message) {
-            super(message);
-        }
-
-    }
-
-    public static final Comparator<PosMatch> compLength = new Comparator<PosMatch>() {
-        @Override
-        public int compare(PosMatch o1, PosMatch o2) {
-            return Integer.compare(o1.getLength(), o2.getLength());
-        }
-    }.reversed();
-
-    public static final Comparator<PosMatch> compImportance = new Comparator<PosMatch>() {
-        @Override
-        public int compare(PosMatch o1, PosMatch o2) {
-            return Integer.compare(o1.getImportance(), o2.getImportance());
-        }
-    }.reversed();
-
-    public static final Comparator<PosMatch> cmpMatchers = compLength.thenComparing(compImportance);
-
-    public static <T, I, P extends PosMatch<T, I>> Optional<PosMatched<T, I>> findBestMatch(RefillableBuffer<T> refillable, Collection<? extends P> matchers) throws MatchException {
+    /**
+     * Using refillable buffer find next match using provided collection of
+     * matchers.
+     *
+     * @param <T>
+     * @param <I>
+     * @param <P>
+     * @param refillable
+     * @param matchers
+     * @return
+     */
+    public static <T, I, P extends PosMatch<T, I>> Optional<PosMatched<T, I>> findBestMatch(RefillableBuffer<T> refillable, Collection<? extends P> matchers) {
 
         while (refillable.hasNext()) {
             ArrayList<T> liveList = new ArrayList<>();
@@ -103,7 +97,7 @@ public class SimplePosMatcherCombinator<T, I, P extends PosMatch<T, I>> extends 
                 for (int i = liveList.size() - 1; i >= max; i--) {
                     refillable.returnItem(liveList.get(i));
                 }
-                return Optional.of(new PosMatched<>(tokens));
+                return Optional.of(new PosMatchedSimple<>(tokens));
             }
 
             List<I> maxMatched = finalized.get(max);
@@ -116,18 +110,29 @@ public class SimplePosMatcherCombinator<T, I, P extends PosMatch<T, I>> extends 
             for (int i = liveList.size() - 1; i >= max; i--) {
                 refillable.returnItem(liveList.get(i));
             }
-            return Optional.of(new PosMatched<>(maxMatched, tokens));
+            return Optional.of(new PosMatchedSimple<>(maxMatched, tokens));
 
         }
         return Optional.empty();
 
     }
 
-    public static <T, P extends PosMatch<T, P>> List<PosMatched<T, P>> tryMatchAll(Iterator<T> items, Collection<? extends P> matchersCol) throws MatchException {
+    /**
+     * Repeatedly call {@link SimplePosMatcherCombinator#findBestMatch(lt.lb.configurablelexer.utils.RefillableBuffer, java.util.Collection)
+     * } and collect everything to the list.
+     *
+     * @param <T>
+     * @param <P>
+     * @param items
+     * @param matchersCol
+     * @return
+     */
+    public static <T, P extends PosMatch<T, P>> List<PosMatched<T, P>> tryMatchAll(Iterator<T> items, Collection<? extends P> matchersCol) {
 
         List<P> matchers = matchersCol.stream()
                 .filter(p -> p.getLength() > 0)
-                .sorted(cmpMatchers).collect(Collectors.toList());
+                .sorted(cmpMatchers)
+                .collect(Collectors.toList());
 
         RefillableBuffer<T> refillable = new RefillableBuffer<>(items);
         ArrayList<PosMatched<T, P>> matched = new ArrayList<>();
@@ -153,6 +158,17 @@ public class SimplePosMatcherCombinator<T, I, P extends PosMatch<T, I>> extends 
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Lift {@link PosMatched} items to further combine it based on provided
+     * matchers, then collect the items into the one {@link PosMatched} instead
+     * of multiple ones.
+     *
+     * @param <T>
+     * @param <I>
+     * @param iterator
+     * @param matchers
+     * @return
+     */
     public static <T, I> Iterator<PosMatched<T, I>> flatLift(Iterator<PosMatched<T, I>> iterator, Collection<? extends PosMatch<PosMatched<T, I>, I>> matchers) {
         Iterator<PosMatched<PosMatched<T, I>, I>> iterator1 = lift(iterator, matchers);
         return new Iterator<PosMatched<T, I>>() {
@@ -164,23 +180,35 @@ public class SimplePosMatcherCombinator<T, I, P extends PosMatch<T, I>> extends 
             @Override
             public PosMatched<T, I> next() {
                 PosMatched<PosMatched<T, I>, I> next = iterator1.next();
-                if (next.matchedBy.isEmpty()) {
+                if (next.countMatchers() == 0) {
                     return next.getItem(0);
                 }
-                List<T> items = next.items.stream().flatMap(m -> m.items.stream()).collect(Collectors.toList());
-                return new PosMatched<>(next.matchedBy, items);
+                ArrayList<T> items = new ArrayList<>();
+                next.items().forEach(it -> {
+                    items.addAll(it.items());
+                });
+                return new PosMatchedSimple<>(next.matchedBy(), items);
             }
         };
 
     }
-    
-    public static <T, I> Iterator<PosMatched<PosMatched<T, I>,I>> lift(Iterator<PosMatched<T, I>> iterator, Collection<? extends PosMatch<PosMatched<T, I>, I>> matchers) {
+
+    /**
+     * Lift {@link PosMatched} items to further combine it based on provided
+     * matchers.
+     *
+     * @param <T>
+     * @param <I>
+     * @param iterator
+     * @param matchers
+     * @return
+     */
+    public static <T, I> Iterator<PosMatched<PosMatched<T, I>, I>> lift(Iterator<PosMatched<T, I>> iterator, Collection<? extends PosMatch<PosMatched<T, I>, I>> matchers) {
         return new SimplePosMatcherCombinator<>(iterator, matchers).toSimplifiedIterator().iterator();
     }
 
     @Override
     protected Optional<List<PosMatched<T, I>>> produceNextList(Optional<List<PosMatched<T, I>>> currentList) throws Exception {
-
         Optional<PosMatched<T, I>> find = findBestMatch(refillable, matchers);
         return find.map(m -> {
             return Arrays.asList(m);

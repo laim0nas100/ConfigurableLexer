@@ -17,7 +17,7 @@ public class NameLiftPosMatch<T, M> extends BaseLiftPosMatch<T, M> {
 
     @Override
     public boolean matches(int position, PosMatched<T, M> item) {
-        return item.contains(name);
+        return item.containsMatcher(name);
     }
 
 

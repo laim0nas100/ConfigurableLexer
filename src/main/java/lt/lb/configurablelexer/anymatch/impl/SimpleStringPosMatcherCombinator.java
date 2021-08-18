@@ -1,7 +1,8 @@
-package lt.lb.configurablelexer.anymatch;
+package lt.lb.configurablelexer.anymatch.impl;
 
 import java.util.Collection;
 import java.util.Iterator;
+import lt.lb.configurablelexer.anymatch.PosMatch;
 
 /**
  *
