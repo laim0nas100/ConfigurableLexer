@@ -1,7 +1,6 @@
 package lt.lb.configurablelexer.anymatch.impl;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import lt.lb.configurablelexer.Id;
 import lt.lb.configurablelexer.anymatch.PosMatched;
@@ -10,17 +9,28 @@ import lt.lb.configurablelexer.anymatch.PosMatched;
  *
  * @author laim0nas100
  */
-public class PosMatchedSimple<T, P> implements PosMatched<T,P>, Id {
+public class PosMatchedSimple<T, P> implements PosMatched<T, P>, Id {
+
+    private static final PosMatchedSimple empty = new PosMatchedSimple();
+
+    public static <T, P> PosMatchedSimple<T, P> empty() {
+        return empty;
+    }
 
     protected final List<P> matchedBy;
     protected final List<T> items;
+
+    private PosMatchedSimple() {
+        this.matchedBy = Collections.emptyList();
+        this.items = Collections.emptyList();
+    }
 
     public PosMatchedSimple(List<T> items) {
 
         if (items == null || items.isEmpty()) {
             throw new IllegalArgumentException("Empty items");
         }
-        this.matchedBy = Arrays.asList();
+        this.matchedBy = Collections.emptyList();
         this.items = items;
     }
 

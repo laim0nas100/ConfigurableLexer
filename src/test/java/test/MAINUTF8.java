@@ -20,6 +20,8 @@ public class MAINUTF8 {
         String term = "\nok1 ok2\n *hell?o??" + " NOT  **something else?* regular";
 
         term += "你好, おはよう, α-Ω\uD834\uDD1E";
+        
+        System.out.println(term.length()+" codepoints "+term.codePoints().count());
 
         SimplePosTokenizer simplePosTokenizer = new SimplePosTokenizer(c -> !Character.isWhitespace(c));
         ConfTokenizer myTokenizer = simplePosTokenizer;

@@ -142,6 +142,10 @@ public abstract class Matchers<T, I, P extends PosMatch<T, I>, PP extends PosMat
         return decorate(new ConcatPosMatch<>(matchers));
     }
 
+    public P array(T[] array) {
+        return decorate(new ArrayPosMatch<>(array));
+    }
+
     public PP concatLifted(PosMatch<PosMatched<T, I>, I>... matchers) {
         return decorateLifted(new ConcatPosMatch<>(matchers));
     }

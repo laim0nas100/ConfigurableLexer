@@ -6,8 +6,14 @@ import java.util.List;
 /**
  *
  * @author laim0nas100
+ * @param <T>
+ * @param <P>
  */
 public interface PosMatched<T, P> {
+    
+    public default boolean isEmpty(){
+        return items().isEmpty();
+    }
     
     public List<P> matchedBy();
     
